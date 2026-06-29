@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "EdgeDL",
+  "version": "1.0.0",
+  "author": "Chumor",
+  "short_name": "EdgeDL",
+  "description": "让 Android Edge 浏览器使用外部下载器下载文件",
+  "homepage_url": "https://github.com/Chumor/EdgeDL-Ext",
+  "icons": {
+    "32": "assets/logo-32.png",
+    "128": "assets/logo.png"
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "EdgeDL",
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "32": "assets/logo-32.png",
+      "128": "assets/logo.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/page-bridge.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/page-bridge.js",
+        "assets/downloader-icons/*.svg"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}
