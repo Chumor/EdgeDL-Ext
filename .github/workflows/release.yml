@@ -1,0 +1,113 @@
+name: Release Extension
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "rollup.config.*"
+      - "tsconfig.json"
+      - ".github/workflows/release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: |
+      startsWith(github.event.head_commit.message, 'chore(release):') &&
+      !contains(github.event.head_commit.message, '[skip release]')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify release version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          EXPECTED_SUBJECT="chore(release): ${VERSION}"
+          COMMIT_SUBJECT=$(git log -1 --pretty=%s)
+
+          if [ "$COMMIT_SUBJECT" != "$EXPECTED_SUBJECT" ]; then
+            echo "Release commit subject mismatch."
+            echo "Expected: $EXPECTED_SUBJECT"
+            echo "Actual:   $COMMIT_SUBJECT"
+            exit 1
+          fi
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists."
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Clean
+        run: npm run clean
+
+      - name: Build
+        run: npm run build
+
+      - name: Package extension
+        run: |
+          cd dist
+          zip -r "../EdgeDL-Ext-v${{ steps.version.outputs.version }}.zip" .
+
+      - name: Generate changelog
+        run: |
+          PREV_TAG=$(git tag --merged HEAD --sort=-v:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | head -n 1)
+
+          if [ -n "$PREV_TAG" ]; then
+            npx -y conventional-changelog-cli -p angular \
+              --from "$PREV_TAG" \
+              --to HEAD \
+              --tag-prefix v \
+              --skip-unstable \
+              > RELEASE_NOTES.md
+          else
+            npx -y conventional-changelog-cli -p angular \
+              --tag-prefix v \
+              --skip-unstable \
+              > RELEASE_NOTES.md
+          fi
+
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No changelog entries." > RELEASE_NOTES.md
+          fi
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            "EdgeDL-Ext-v${{ steps.version.outputs.version }}.zip" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file RELEASE_NOTES.md \
+            --target "$GITHUB_SHA"

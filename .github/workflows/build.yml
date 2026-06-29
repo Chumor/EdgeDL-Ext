@@ -1,0 +1,75 @@
+name: Build Extension
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "rollup.config.*"
+      - "tsconfig.json"
+      - ".github/workflows/build.yml"
+
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "rollup.config.*"
+      - "tsconfig.json"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: |
+      !contains(github.event.head_commit.message || '', '[skip build]')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Clean
+        run: npm run clean
+
+      - name: Build
+        run: npm run build
+
+      - name: Package extension
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          cd dist
+          zip -r "../EdgeDL-Ext-v${VERSION}.zip" .
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: EdgeDL-Ext
+          path: EdgeDL-Ext-v*.zip
+          if-no-files-found: error
+          retention-days: 7
