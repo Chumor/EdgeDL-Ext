@@ -67,16 +67,21 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Clean
-        run: npm run clean
+      - name: Prepare signing key
+        env:
+          EDGE_DL_PEM: ${{ secrets.EdgeDL_PEM }}
+        run: |
+          if [ -z "$EDGE_DL_PEM" ]; then
+            echo "EDGE_DL_PEM secret is required for release CRX packaging."
+            exit 1
+          fi
 
-      - name: Build
-        run: npm run build
+          mkdir -p dist
+          printf '%s\n' "$EDGE_DL_PEM" > dist/EdgeDL-Ext.pem
+          chmod 600 dist/EdgeDL-Ext.pem
 
       - name: Package extension
-        run: |
-          cd dist
-          zip -r "../EdgeDL-Ext-v${{ steps.version.outputs.version }}.zip" .
+        run: npm run pack
 
       - name: Generate changelog
         run: |
@@ -107,7 +112,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ steps.version.outputs.tag }}" \
-            "EdgeDL-Ext-v${{ steps.version.outputs.version }}.zip" \
+            dist/EdgeDL-Ext-v${{ steps.version.outputs.version }}.zip \
+            dist/EdgeDL-Ext-v${{ steps.version.outputs.version }}.crx \
             --title "${{ steps.version.outputs.tag }}" \
             --notes-file RELEASE_NOTES.md \
             --target "$GITHUB_SHA"

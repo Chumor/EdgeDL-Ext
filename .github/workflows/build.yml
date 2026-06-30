@@ -54,22 +54,46 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Clean
-        run: npm run clean
-
       - name: Build
         run: npm run build
 
-      - name: Package extension
+      - name: Prepare signing key
+        id: signing-key
+        if: github.event_name != 'pull_request'
+        env:
+          EDGE_DL_PEM: ${{ secrets.EdgeDL_PEM }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          cd dist
-          zip -r "../EdgeDL-Ext-v${VERSION}.zip" .
+          if [ -z "$EDGE_DL_PEM" ]; then
+            echo "EDGE_DL_PEM secret is not set; skipping package artifacts."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-      - name: Upload extension artifact
+          mkdir -p dist
+          printf '%s\n' "$EDGE_DL_PEM" > dist/EdgeDL-Ext.pem
+          chmod 600 dist/EdgeDL-Ext.pem
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Package extension
+        if: steps.signing-key.outputs.available == 'true'
+        run: npm run pack
+
+      - name: Upload zip artifact
+        if: steps.signing-key.outputs.available == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: EdgeDL-Ext
-          path: EdgeDL-Ext-v*.zip
+          name: EdgeDL-Ext-zip
+          path: dist/*.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload crx artifact
+        if: steps.signing-key.outputs.available == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: EdgeDL-Ext-crx
+          path: dist/*.crx
+          archive: false
           if-no-files-found: error
           retention-days: 7
