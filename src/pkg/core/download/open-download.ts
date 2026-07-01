@@ -14,8 +14,9 @@ import { DOWNLOADERS } from '@/pkg/services/config';
  * @returns {Promise<void>}
  */
 export async function openDownload(url: string, downloader: string) {
-    const launcherKey = (Object.keys(DOWNLOADERS) as Array<keyof typeof DOWNLOADERS>)
-        .find((key) => DOWNLOADERS[key] === downloader);
+    const launcherKey = (Object.keys(DOWNLOADERS) as Array<keyof typeof DOWNLOADERS>).find(
+        (key) => DOWNLOADERS[key] === downloader,
+    );
     if (!launcherKey) {
         showToast('无法打开选择器');
         return;

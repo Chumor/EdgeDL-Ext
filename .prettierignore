@@ -1,8 +1,8 @@
 dist/
 node_modules/
 coverage/
+package-lock.json
 *.crx
 *.pem
 *.zip
-.env
-.env.*
+*.md

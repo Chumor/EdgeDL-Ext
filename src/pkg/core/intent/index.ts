@@ -3,7 +3,6 @@
  * @description 协议构建工具：负责封装 Android 标准 Intent 协议，实现跨进程应用唤起。
  */
 
-
 /**
  * 构造 Android Intent Scheme URI
  * @description

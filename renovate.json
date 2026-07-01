@@ -1,22 +1,22 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
 
-  "baseBranchPatterns": ["dev"],
-  "extends": ["config:recommended"],
+    "baseBranchPatterns": ["dev"],
+    "extends": ["config:recommended"],
 
-  "timezone": "Asia/Shanghai",
-  "schedule": ["at any time"],
+    "timezone": "Asia/Shanghai",
+    "schedule": ["at any time"],
 
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["patch", "minor"],
-      "groupName": "non-major dependencies",
-      "automerge": true,
-      "automergeType": "pr"
-    },
-    {
-      "matchUpdateTypes": ["major"],
-      "automerge": false
-    }
-  ]
+    "packageRules": [
+        {
+            "matchUpdateTypes": ["patch", "minor"],
+            "groupName": "non-major dependencies",
+            "automerge": true,
+            "automergeType": "pr"
+        },
+        {
+            "matchUpdateTypes": ["major"],
+            "automerge": false
+        }
+    ]
 }

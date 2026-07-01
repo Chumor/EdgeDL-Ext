@@ -1,365 +1,503 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EdgeDL</title>
-  <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #f6f6f6;
-      --surface: #ffffff;
-      --text: #333333;
-      --muted: #888888;
-      --fill: #f0f0f0;
-      --fill-hover: #e0e0e0;
-      --success: #4CAF50;
-      --success-soft: rgba(76, 175, 80, 0.12);
-      --success-line: rgba(76, 175, 80, 0.72);
-      --danger: #d65b5b;
-      --danger-soft: rgba(214, 91, 91, 0.12);
-      --blue: #0078d4;
-      --blue-soft: rgba(0, 120, 212, 0.10);
-      --radius-lg: 18px;
-      --radius-md: 12px;
-    }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>EdgeDL</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f6f6f6;
+                --surface: #ffffff;
+                --text: #333333;
+                --muted: #888888;
+                --fill: #f0f0f0;
+                --fill-hover: #e0e0e0;
+                --success: #4caf50;
+                --success-soft: rgba(76, 175, 80, 0.12);
+                --success-line: rgba(76, 175, 80, 0.72);
+                --danger: #d65b5b;
+                --danger-soft: rgba(214, 91, 91, 0.12);
+                --blue: #0078d4;
+                --blue-soft: rgba(0, 120, 212, 0.1);
+                --radius-lg: 18px;
+                --radius-md: 12px;
+            }
 
-    * { box-sizing: border-box; }
+            * {
+                box-sizing: border-box;
+            }
 
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 320px;
-      min-height: 150px;
-      max-height: 560px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                width: 320px;
+                min-height: 150px;
+                max-height: 560px;
+                background: var(--bg);
+                color: var(--text);
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    'Segoe UI',
+                    Roboto,
+                    Helvetica,
+                    Arial,
+                    sans-serif;
+                -webkit-font-smoothing: antialiased;
+            }
 
-    @media (min-width: 340px) {
-      html,
-      body { width: 100%; max-height: none; }
-    }
+            @media (min-width: 340px) {
+                html,
+                body {
+                    width: 100%;
+                    max-height: none;
+                }
+            }
 
-    button {
-      font: inherit;
-      color: inherit;
-      border: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+            button {
+                font: inherit;
+                color: inherit;
+                border: 0;
+                -webkit-tap-highlight-color: transparent;
+            }
 
-    .app { min-width: 320px; background: var(--surface); overflow: hidden; }
+            .app {
+                min-width: 320px;
+                background: var(--surface);
+                overflow: hidden;
+            }
 
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 14px 10px;
-    }
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 12px 14px 10px;
+            }
 
-    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .brand-icon { width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto; }
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+            }
+            .brand-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                flex: 0 0 auto;
+            }
 
-    h1 {
-      margin: 0;
-      font-size: 16px;
-      line-height: 1.15;
-      font-weight: 650;
-      letter-spacing: -0.01em;
-    }
+            h1 {
+                margin: 0;
+                font-size: 16px;
+                line-height: 1.15;
+                font-weight: 650;
+                letter-spacing: -0.01em;
+            }
 
-    .subtitle { margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.2; }
+            .subtitle {
+                margin-top: 2px;
+                color: var(--muted);
+                font-size: 11px;
+                line-height: 1.2;
+            }
 
-    .version {
-      flex: 0 0 auto;
-      padding: 4px 7px;
-      border-radius: 999px;
-      background: var(--fill);
-      color: var(--muted);
-      font: 650 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
+            .version {
+                flex: 0 0 auto;
+                padding: 4px 7px;
+                border-radius: 999px;
+                background: var(--fill);
+                color: var(--muted);
+                font:
+                    650 10px/1 ui-monospace,
+                    SFMono-Regular,
+                    Menlo,
+                    monospace;
+            }
 
-    .status-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin: 0 14px 8px;
-      padding: 9px 10px;
-      border-radius: 14px;
-      background: var(--bg);
-    }
+            .status-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin: 0 14px 8px;
+                padding: 9px 10px;
+                border-radius: 14px;
+                background: var(--bg);
+            }
 
-    .status-meta { min-width: 0; }
-    .status-kicker { color: var(--muted); font-size: 10px; line-height: 1.2; }
+            .status-meta {
+                min-width: 0;
+            }
+            .status-kicker {
+                color: var(--muted);
+                font-size: 10px;
+                line-height: 1.2;
+            }
 
-    .host {
-      max-width: 190px;
-      margin-top: 2px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-      line-height: 1.25;
-      font-weight: 600;
-    }
+            .host {
+                max-width: 190px;
+                margin-top: 2px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 12px;
+                line-height: 1.25;
+                font-weight: 600;
+            }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      height: 24px;
-      padding: 0 9px;
-      border-radius: 999px;
-      background: var(--success-soft);
-      color: var(--success);
-      font-size: 11px;
-      font-weight: 650;
-      white-space: nowrap;
-    }
+            .pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                height: 24px;
+                padding: 0 9px;
+                border-radius: 999px;
+                background: var(--success-soft);
+                color: var(--success);
+                font-size: 11px;
+                font-weight: 650;
+                white-space: nowrap;
+            }
 
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .pill.off { background: var(--danger-soft); color: var(--danger); }
+            .dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+            .pill.off {
+                background: var(--danger-soft);
+                color: var(--danger);
+            }
 
-    .content { display: grid; gap: 13px; padding: 6px 14px 14px; }
-    .group { display: grid; gap: 8px; }
+            .content {
+                display: grid;
+                gap: 13px;
+                padding: 6px 14px 14px;
+            }
+            .group {
+                display: grid;
+                gap: 8px;
+            }
 
-    .group-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 28px;
-    }
+            .group-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                min-height: 28px;
+            }
 
-    .group-title { margin: 0; font-size: 13px; line-height: 1.25; font-weight: 650; }
-    .group-desc { color: var(--muted); font-size: 11px; line-height: 1.35; }
+            .group-title {
+                margin: 0;
+                font-size: 13px;
+                line-height: 1.25;
+                font-weight: 650;
+            }
+            .group-desc {
+                color: var(--muted);
+                font-size: 11px;
+                line-height: 1.35;
+            }
 
-    .site-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: var(--radius-lg);
-      background: var(--bg);
-    }
+            .site-card {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: var(--radius-lg);
+                background: var(--bg);
+            }
 
-    .switch {
-      position: relative;
-      flex: 0 0 auto;
-      width: 44px;
-      height: 26px;
-      border-radius: 999px;
-      background: var(--danger-soft);
-      cursor: pointer;
-      transition: background 160ms ease, opacity 160ms ease;
-    }
+            .switch {
+                position: relative;
+                flex: 0 0 auto;
+                width: 44px;
+                height: 26px;
+                border-radius: 999px;
+                background: var(--danger-soft);
+                cursor: pointer;
+                transition:
+                    background 160ms ease,
+                    opacity 160ms ease;
+            }
 
-    .switch::before {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 999px;
-      background: var(--danger);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-      transition: transform 160ms ease, background 160ms ease;
-    }
+            .switch::before {
+                content: '';
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 20px;
+                height: 20px;
+                border-radius: 999px;
+                background: var(--danger);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+                transition:
+                    transform 160ms ease,
+                    background 160ms ease;
+            }
 
-    .switch.on { background: var(--success-soft); }
-    .switch.on::before { transform: translateX(18px); background: var(--success); }
-    .switch:disabled { opacity: .5; cursor: not-allowed; }
+            .switch.on {
+                background: var(--success-soft);
+            }
+            .switch.on::before {
+                transform: translateX(18px);
+                background: var(--success);
+            }
+            .switch:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
 
-    .downloader-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .downloader-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
 
-    .downloader {
-      position: relative;
-      min-height: 72px;
-      padding: 8px 6px 7px;
-      border-radius: var(--radius-md);
-      background: var(--fill);
-      cursor: pointer;
-      transition: transform 140ms ease, background 160ms ease, outline-color 160ms ease;
-    }
+            .downloader {
+                position: relative;
+                min-height: 72px;
+                padding: 8px 6px 7px;
+                border-radius: var(--radius-md);
+                background: var(--fill);
+                cursor: pointer;
+                transition:
+                    transform 140ms ease,
+                    background 160ms ease,
+                    outline-color 160ms ease;
+            }
 
-    .downloader:active { transform: scale(0.97); }
-    .downloader:hover { background: var(--fill-hover); }
-    .downloader.selected { background: var(--success-soft); outline: 1.5px solid var(--success-line); }
+            .downloader:active {
+                transform: scale(0.97);
+            }
+            .downloader:hover {
+                background: var(--fill-hover);
+            }
+            .downloader.selected {
+                background: var(--success-soft);
+                outline: 1.5px solid var(--success-line);
+            }
 
-    .icon-box {
-      display: grid;
-      place-items: center;
-      width: 32px;
-      height: 32px;
-      margin: 0 auto 6px;
-      border-radius: 11px;
-      background: rgba(255, 255, 255, 0.58);
-    }
+            .icon-box {
+                display: grid;
+                place-items: center;
+                width: 32px;
+                height: 32px;
+                margin: 0 auto 6px;
+                border-radius: 11px;
+                background: rgba(255, 255, 255, 0.58);
+            }
 
-    .downloader.selected .icon-box { background: rgba(255, 255, 255, 0.64); }
-    .downloader img { display: block; width: 23px; height: 23px; }
+            .downloader.selected .icon-box {
+                background: rgba(255, 255, 255, 0.64);
+            }
+            .downloader img {
+                display: block;
+                width: 23px;
+                height: 23px;
+            }
 
-    .downloader .label {
-      display: block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      text-align: center;
-      font-size: 11px;
-      line-height: 1.2;
-      font-weight: 550;
-    }
+            .downloader .label {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-align: center;
+                font-size: 11px;
+                line-height: 1.2;
+                font-weight: 550;
+            }
 
-    .downloader .check {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      display: none;
-      width: 16px;
-      height: 16px;
-      place-items: center;
-      border-radius: 999px;
-      background: var(--success);
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-    }
+            .downloader .check {
+                position: absolute;
+                top: 6px;
+                right: 6px;
+                display: none;
+                width: 16px;
+                height: 16px;
+                place-items: center;
+                border-radius: 999px;
+                background: var(--success);
+                color: white;
+                font-size: 10px;
+                font-weight: 800;
+            }
 
-    .downloader.selected .check { display: grid; }
+            .downloader.selected .check {
+                display: grid;
+            }
 
-    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
 
-    .action {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 36px;
-      padding: 0 10px;
-      border-radius: var(--radius-md);
-      background: var(--fill);
-      font-size: 12px;
-      font-weight: 550;
-      cursor: pointer;
-      transition: transform 140ms ease, background 140ms ease, opacity 140ms ease;
-    }
+            .action {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 36px;
+                padding: 0 10px;
+                border-radius: var(--radius-md);
+                background: var(--fill);
+                font-size: 12px;
+                font-weight: 550;
+                cursor: pointer;
+                transition:
+                    transform 140ms ease,
+                    background 140ms ease,
+                    opacity 140ms ease;
+            }
 
-    .action:active { transform: scale(0.98); }
-    .action:hover { background: var(--fill-hover); }
-    .action.primary { background: var(--blue-soft); color: var(--blue); }
-    .action.danger { background: var(--danger-soft); color: var(--danger); }
-    .action:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-    .footer-actions { padding-top: 1px; }
+            .action:active {
+                transform: scale(0.98);
+            }
+            .action:hover {
+                background: var(--fill-hover);
+            }
+            .action.primary {
+                background: var(--blue-soft);
+                color: var(--blue);
+            }
+            .action.danger {
+                background: var(--danger-soft);
+                color: var(--danger);
+            }
+            .action:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none;
+            }
+            .footer-actions {
+                padding-top: 1px;
+            }
 
-    .toast {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      z-index: 20;
-      width: max-content;
-      min-width: 72px;
-      max-width: calc(100% - 48px);
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: rgba(32, 33, 36, 0.96);
-      color: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
-      font-size: 12px;
-      font-weight: 600;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      pointer-events: none;
-      opacity: 0;
-      transform: translateX(-50%) translateY(-7px);
-      transition: opacity 160ms ease, transform 160ms ease;
-    }
+            .toast {
+                position: fixed;
+                top: 10px;
+                left: 50%;
+                z-index: 20;
+                width: max-content;
+                min-width: 72px;
+                max-width: calc(100% - 48px);
+                padding: 7px 12px;
+                border-radius: 999px;
+                background: rgba(32, 33, 36, 0.96);
+                color: white;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+                font-size: 12px;
+                font-weight: 600;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                pointer-events: none;
+                opacity: 0;
+                transform: translateX(-50%) translateY(-7px);
+                transition:
+                    opacity 160ms ease,
+                    transform 160ms ease;
+            }
 
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+            .toast.show {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #202020;
-        --surface: #292929;
-        --text: #ffffff;
-        --muted: #b8b8b8;
-        --fill: #383838;
-        --fill-hover: #444444;
-        --success: #81C784;
-        --success-soft: rgba(129, 199, 132, 0.16);
-        --success-line: rgba(129, 199, 132, 0.82);
-        --danger: #ef9a9a;
-        --danger-soft: rgba(239, 154, 154, 0.14);
-        --blue: #8ecbff;
-        --blue-soft: rgba(142, 203, 255, 0.14);
-      }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #202020;
+                    --surface: #292929;
+                    --text: #ffffff;
+                    --muted: #b8b8b8;
+                    --fill: #383838;
+                    --fill-hover: #444444;
+                    --success: #81c784;
+                    --success-soft: rgba(129, 199, 132, 0.16);
+                    --success-line: rgba(129, 199, 132, 0.82);
+                    --danger: #ef9a9a;
+                    --danger-soft: rgba(239, 154, 154, 0.14);
+                    --blue: #8ecbff;
+                    --blue-soft: rgba(142, 203, 255, 0.14);
+                }
 
-      .icon-box { background: rgba(255, 255, 255, 0.08); }
-      .downloader.selected .icon-box { background: rgba(255, 255, 255, 0.10); }
-    }
-  </style>
-</head>
-<body>
-  <main class="app" aria-label="EdgeDL 扩展管理菜单">
-    <header class="topbar">
-      <div class="brand">
-        <img id="brand-icon" class="brand-icon" alt="" />
-        <div>
-          <h1>EdgeDL</h1>
-          <div class="subtitle">外部下载器</div>
-        </div>
-      </div>
-      <div id="version" class="version">v-</div>
-    </header>
+                .icon-box {
+                    background: rgba(255, 255, 255, 0.08);
+                }
+                .downloader.selected .icon-box {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main class="app" aria-label="EdgeDL 扩展管理菜单">
+            <header class="topbar">
+                <div class="brand">
+                    <img id="brand-icon" class="brand-icon" alt="" />
+                    <div>
+                        <h1>EdgeDL</h1>
+                        <div class="subtitle">外部下载器</div>
+                    </div>
+                </div>
+                <div id="version" class="version">v-</div>
+            </header>
 
-    <div class="status-row">
-      <div class="status-meta">
-        <div class="status-kicker">当前站点</div>
-        <div id="current-host" class="host">读取中…</div>
-      </div>
-      <div id="site-pill" class="pill"><span class="dot"></span><span>读取中</span></div>
-    </div>
+            <div class="status-row">
+                <div class="status-meta">
+                    <div class="status-kicker">当前站点</div>
+                    <div id="current-host" class="host">读取中…</div>
+                </div>
+                <div id="site-pill" class="pill"><span class="dot"></span><span>读取中</span></div>
+            </div>
 
-    <div class="content">
-      <section class="group">
-        <div class="site-card">
-          <div>
-            <h2 class="group-title">站点接管</h2>
-            <div id="site-desc" class="group-desc">处理本站下载跳转</div>
-          </div>
-          <button id="site-switch" class="switch" type="button" aria-label="切换当前站点接管状态" disabled></button>
-        </div>
-        <div class="actions">
-          <button id="open-picker" class="action primary" type="button">页面选择器</button>
-          <button id="reload-state" class="action" type="button">刷新状态</button>
-        </div>
-      </section>
+            <div class="content">
+                <section class="group">
+                    <div class="site-card">
+                        <div>
+                            <h2 class="group-title">站点接管</h2>
+                            <div id="site-desc" class="group-desc">处理本站下载跳转</div>
+                        </div>
+                        <button
+                            id="site-switch"
+                            class="switch"
+                            type="button"
+                            aria-label="切换当前站点接管状态"
+                            disabled
+                        ></button>
+                    </div>
+                    <div class="actions">
+                        <button id="open-picker" class="action primary" type="button">页面选择器</button>
+                        <button id="reload-state" class="action" type="button">刷新状态</button>
+                    </div>
+                </section>
 
-      <section class="group">
-        <div class="group-head">
-          <div>
-            <h2 class="group-title">默认下载器</h2>
-            <div id="default-desc" class="group-desc">下载时询问</div>
-          </div>
-        </div>
-        <div id="downloader-grid" class="downloader-grid" aria-label="默认下载器"></div>
-      </section>
+                <section class="group">
+                    <div class="group-head">
+                        <div>
+                            <h2 class="group-title">默认下载器</h2>
+                            <div id="default-desc" class="group-desc">下载时询问</div>
+                        </div>
+                    </div>
+                    <div id="downloader-grid" class="downloader-grid" aria-label="默认下载器"></div>
+                </section>
 
-      <div class="actions footer-actions">
-        <button id="clear-default" class="action danger" type="button">清除默认</button>
-        <button id="close-popup" class="action" type="button">完成</button>
-      </div>
-    </div>
+                <div class="actions footer-actions">
+                    <button id="clear-default" class="action danger" type="button">清除默认</button>
+                    <button id="close-popup" class="action" type="button">完成</button>
+                </div>
+            </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  </main>
-  <script src="popup.js"></script>
-</body>
+            <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        </main>
+        <script src="popup.js"></script>
+    </body>
 </html>

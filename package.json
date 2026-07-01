@@ -1,25 +1,37 @@
 {
-  "name": "edgedl-ext",
-  "version": "1.0.0",
-  "description": "EdgeDL：让 Android Edge 浏览器使用外部下载器下载文件的浏览器扩展",
-  "author": "Chumor",
-  "license": "Apache-2.0",
-  "main": "rollup.config.ts",
-  "scripts": {
-    "build": "node node_modules/rollup/dist/bin/rollup -c && node scripts/copy-static.mjs",
-    "clean": "rm -rf dist",
-    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
-    "tree": "find . -path ./node_modules -prune -o -path ./dist -prune -o -print | sort"
-  },
-  "type": "module",
-  "devDependencies": {
-    "@rollup/plugin-alias": "^6.0.0",
-    "@rollup/plugin-commonjs": "^29.0.0",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-typescript": "^12.3.0",
-    "crx3": "^2.0.0",
-    "rollup": "^4.59.0",
-    "tslib": "^2.8.1",
-    "typescript": "^6.0.2"
-  }
+    "name": "edgedl-ext",
+    "version": "1.0.0",
+    "description": "EdgeDL：让 Android Edge 浏览器使用外部下载器下载文件的浏览器扩展",
+    "author": "Chumor",
+    "license": "Apache-2.0",
+    "private": true,
+    "scripts": {
+        "build": "node node_modules/rollup/dist/bin/rollup -c && node scripts/copy-static.mjs",
+        "clean": "rm -rf dist",
+        "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+        "tree": "find . -path ./node_modules -prune -o -path ./dist -prune -o -print | sort",
+        "lint": "npm run typecheck && node node_modules/eslint/bin/eslint.js .",
+        "lint:ci": "npm run typecheck && node node_modules/eslint/bin/eslint.js . --max-warnings=0",
+        "format": "node node_modules/prettier/bin/prettier.cjs --write .",
+        "format:check": "node node_modules/prettier/bin/prettier.cjs --check .",
+        "test": "node --experimental-strip-types --test \"test/**/*.test.ts\"",
+        "test:ci": "node --experimental-strip-types --test \"test/**/*.test.ts\""
+    },
+    "type": "module",
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@rollup/plugin-alias": "^6.0.0",
+        "@rollup/plugin-commonjs": "^29.0.0",
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-typescript": "^12.3.0",
+        "crx3": "^2.0.0",
+        "eslint": "^10.6.0",
+        "eslint-config-prettier": "^10.1.8",
+        "globals": "^17.7.0",
+        "prettier": "^3.9.4",
+        "rollup": "^4.59.0",
+        "tslib": "^2.8.1",
+        "typescript": "^6.0.2",
+        "typescript-eslint": "^8.62.1"
+    }
 }

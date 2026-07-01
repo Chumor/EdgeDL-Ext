@@ -10,7 +10,9 @@ export function isDownloadRequestMessage(value: unknown): value is DownloadReque
     if (!value || typeof value !== 'object') return false;
 
     const message = value as Record<PropertyKey, unknown>;
-    return message.source === EDGEDL_MESSAGE_SOURCE &&
+    return (
+        message.source === EDGEDL_MESSAGE_SOURCE &&
         message.type === 'download-request' &&
-        typeof message.url === 'string';
+        typeof message.url === 'string'
+    );
 }

@@ -76,15 +76,12 @@ export async function toggleSiteIntercept() {
 }
 
 async function isEdgeDefaultDownloader() {
-    return await storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null) === EDGE_DOWNLOADER_VALUE;
+    return (await storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null)) === EDGE_DOWNLOADER_VALUE;
 }
 
 export async function initializeInterceptState() {
     try {
-        const [siteIntercepted, usesEdgeDefault] = await Promise.all([
-            isSiteIntercepted(),
-            isEdgeDefaultDownloader(),
-        ]);
+        const [siteIntercepted, usesEdgeDefault] = await Promise.all([isSiteIntercepted(), isEdgeDefaultDownloader()]);
         interceptEnabled = !siteIntercepted;
         edgeDefaultDownloader = usesEdgeDefault;
     } catch (error) {

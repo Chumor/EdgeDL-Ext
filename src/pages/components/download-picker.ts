@@ -21,9 +21,7 @@ export interface CancelDownloadPickerResult {
 
 export type DownloadPickerResult = CancelDownloadPickerResult | EdgeDownloadPickerResult | ExternalDownloadPickerResult;
 
-export async function showDownloadPicker(
-    callback: (result: DownloadPickerResult) => void
-) {
+export async function showDownloadPicker(callback: (result: DownloadPickerResult) => void) {
     if (document.getElementById('edgedl-picker')) {
         callback({ type: 'cancel' });
         return;
@@ -71,7 +69,7 @@ export async function showDownloadPicker(
         const vvp = window.visualViewport;
         const w = vvp ? vvp.width : document.documentElement.clientWidth;
         const card = shadow.querySelector('.edgedl-card') as HTMLDivElement | null;
-        if (card) card.style.maxWidth = (w - 32) + 'px';
+        if (card) card.style.maxWidth = w - 32 + 'px';
     };
     layoutPicker();
 
@@ -286,7 +284,7 @@ export async function showDownloadPicker(
     });
 
     // 点击唤起
-    shadow.querySelectorAll('button').forEach(btn => {
+    shadow.querySelectorAll('button').forEach((btn) => {
         btn.addEventListener('click', async () => {
             const pkg = btn.dataset.pkg || '';
 

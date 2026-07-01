@@ -38,11 +38,14 @@ interface EdgeDLWindow extends Window {
         const url = normalizeUrl(input);
         if (!url || !isDownloadLink(url)) return false;
 
-        window.postMessage({
-            source: EDGEDL_MESSAGE_SOURCE,
-            type: 'download-request',
-            url,
-        }, '*');
+        window.postMessage(
+            {
+                source: EDGEDL_MESSAGE_SOURCE,
+                type: 'download-request',
+                url,
+            },
+            '*',
+        );
 
         return true;
     }

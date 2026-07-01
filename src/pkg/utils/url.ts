@@ -5,7 +5,7 @@
 
 /**
  * 从 HTML 属性 (onclick) 中解析下载链接
- * @description 
+ * @description
  * 解析逻辑：
  * 1. 扫描输入字符串中的 URI 模式。
  * 2. 匹配以 http(s) 开头且被常见 HTML 字符（引号、括号、空白）截断前的字符串片段。

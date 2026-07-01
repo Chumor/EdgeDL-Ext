@@ -3,10 +3,7 @@ import { DEFAULT_DOWNLOADER_KEY, EDGE_DOWNLOADER_VALUE } from '@/pkg/services/co
 import { storage } from '@/pkg/browser/api';
 
 async function ensureDefaultStorage() {
-    await Promise.all([
-        storage.get(DEFAULT_DOWNLOADER_KEY, ''),
-        storage.get<string[]>(getInterceptSitesKey(), []),
-    ]);
+    await Promise.all([storage.get(DEFAULT_DOWNLOADER_KEY, ''), storage.get<string[]>(getInterceptSitesKey(), [])]);
 }
 
 function getHostname(url?: string) {

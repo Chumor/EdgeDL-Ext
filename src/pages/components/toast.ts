@@ -78,15 +78,12 @@ function injectStyle() {
  * @returns {'dark' | 'light'} 当前系统主题模式
  */
 function getTheme() {
-    return window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 /**
  * 渲染全局反馈通知 (Toast)
- * @description 
+ * @description
  * 核心调度逻辑：
  * 1. 样式单例校验：执行 CSS 延迟注入。
  * 2. 状态锁定：执行存量实例回收，确保全局单例显示。
@@ -97,14 +94,11 @@ function getTheme() {
  * @param {number} [options.duration=900] - 持续展示时间 (ms)
  * @param {'info' | 'error'} [options.type='info'] - 通知语义类型，决定视觉特征与图标
  */
-export function showToast(message: string, options: { duration?: number, type?: 'info' | 'error' } = {}) {
+export function showToast(message: string, options: { duration?: number; type?: 'info' | 'error' } = {}) {
     try {
         injectStyle();
 
-        const {
-            duration = 900,
-            type = 'info'
-        } = options;
+        const { duration = 900, type = 'info' } = options;
 
         if (activeToast) activeToast.remove();
 
@@ -129,7 +123,7 @@ export function showToast(message: string, options: { duration?: number, type?: 
                     toast.remove();
                     if (activeToast === toast) activeToast = null;
                 },
-                { once: true }
+                { once: true },
             );
         }, duration);
     } catch (err) {

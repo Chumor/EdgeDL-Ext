@@ -23,7 +23,6 @@ declare namespace chrome {
                 ) => boolean | void,
             ): void;
         };
-
     }
 
     namespace action {

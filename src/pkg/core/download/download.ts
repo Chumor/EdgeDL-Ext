@@ -21,7 +21,8 @@ export interface CancelDownloadRequestResult {
     type: 'cancel';
 }
 
-export type DownloadRequestResult = CancelDownloadRequestResult | EdgeDownloadRequestResult | ExternalDownloadRequestResult;
+export type DownloadRequestResult =
+    CancelDownloadRequestResult | EdgeDownloadRequestResult | ExternalDownloadRequestResult;
 
 export async function requestDownload(url: string): Promise<DownloadRequestResult> {
     if (!url) return { type: 'cancel' };
