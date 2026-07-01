@@ -7,18 +7,24 @@
         <style>
             :root {
                 color-scheme: light dark;
-                --bg: #f6f6f6;
-                --surface: #ffffff;
-                --text: #333333;
-                --muted: #888888;
-                --fill: #f0f0f0;
-                --fill-hover: #e0e0e0;
-                --success: #4caf50;
-                --success-soft: rgba(76, 175, 80, 0.12);
-                --success-line: rgba(76, 175, 80, 0.72);
-                --danger: #d65b5b;
-                --danger-soft: rgba(214, 91, 91, 0.12);
-                --blue: #0078d4;
+                --bg: #f5f5f5;
+                --surface: #f5f5f5;
+                --text: #242424;
+                --muted: #6f6f6f;
+                --fill: #fefefe;
+                --fill-hover: #ffffff;
+                --card: #fefefe;
+                --card-border: rgba(0, 0, 0, 0.04);
+                --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+                --success: #13a10e;
+                --success-soft: rgba(19, 161, 14, 0.12);
+                --success-line: rgba(19, 161, 14, 0.72);
+                --danger: #bc2f32;
+                --danger-soft: rgba(188, 47, 50, 0.12);
+                --switch-on: #2169eb;
+                --switch-off: #bdbdbd;
+                --switch-thumb: #ffffff;
+                --blue: #2169EB;
                 --blue-soft: rgba(0, 120, 212, 0.1);
                 --radius-lg: 18px;
                 --radius-md: 12px;
@@ -127,7 +133,9 @@
                 margin: 0 14px 8px;
                 padding: 9px 10px;
                 border-radius: 14px;
-                background: var(--bg);
+                background: var(--card);
+                border: 1px solid var(--card-border);
+                box-shadow: var(--card-highlight);
             }
 
             .status-meta {
@@ -212,7 +220,9 @@
                 gap: 12px;
                 padding: 10px 12px;
                 border-radius: var(--radius-lg);
-                background: var(--bg);
+                background: var(--card);
+                border: 1px solid var(--card-border);
+                box-shadow: var(--card-highlight);
             }
 
             .switch {
@@ -221,7 +231,7 @@
                 width: 44px;
                 height: 26px;
                 border-radius: 999px;
-                background: var(--danger-soft);
+                background: var(--switch-off);
                 cursor: pointer;
                 transition:
                     background 160ms ease,
@@ -236,7 +246,7 @@
                 width: 20px;
                 height: 20px;
                 border-radius: 999px;
-                background: var(--danger);
+                background: var(--switch-thumb);
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
                 transition:
                     transform 160ms ease,
@@ -244,11 +254,11 @@
             }
 
             .switch.on {
-                background: var(--success-soft);
+                background: var(--switch-on);
             }
             .switch.on::before {
                 transform: translateX(18px);
-                background: var(--success);
+                background: var(--switch-thumb);
             }
             .switch:disabled {
                 opacity: 0.5;
@@ -414,17 +424,23 @@
 
             @media (prefers-color-scheme: dark) {
                 :root {
-                    --bg: #202020;
+                    --bg: #292929;
                     --surface: #292929;
                     --text: #ffffff;
-                    --muted: #b8b8b8;
-                    --fill: #383838;
+                    --muted: #d0d0d0;
+                    --fill: #3a3a3a;
                     --fill-hover: #444444;
-                    --success: #81c784;
-                    --success-soft: rgba(129, 199, 132, 0.16);
-                    --success-line: rgba(129, 199, 132, 0.82);
-                    --danger: #ef9a9a;
-                    --danger-soft: rgba(239, 154, 154, 0.14);
+                    --card: #3a3a3a;
+                    --card-border: rgba(255, 255, 255, 0.06);
+                    --card-highlight: none;
+                    --success: #0eb244;
+                    --success-soft: rgba(14, 178, 68, 0.16);
+                    --success-line: rgba(14, 178, 68, 0.82);
+                    --danger: #e37d80;
+                    --danger-soft: rgba(227, 125, 128, 0.14);
+                    --switch-on: #4d8dfa;
+                    --switch-off: #5c5c5c;
+                    --switch-thumb: #ffffff;
                     --blue: #8ecbff;
                     --blue-soft: rgba(142, 203, 255, 0.14);
                 }
@@ -445,7 +461,7 @@
                     <img id="brand-icon" class="brand-icon" alt="" />
                     <div>
                         <h1>EdgeDL</h1>
-                        <div class="subtitle">外部下载器</div>
+                        <div class="subtitle">在 Android Edge 中使用外部下载器</div>
                     </div>
                 </div>
                 <div id="version" class="version">v-</div>

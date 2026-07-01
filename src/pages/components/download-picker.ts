@@ -91,6 +91,12 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
             pointer-events: none;
             contain: layout style paint;
             isolation: isolate;
+            --edgedl-bg: #F5F5F5;
+            --edgedl-highlight: #FEFEFE;
+            --edgedl-text: #242424;
+            --edgedl-muted: #6f6f6f;
+            --edgedl-selection-bg: rgba(76, 175, 80, 0.12);
+            --edgedl-selection-line: rgba(76, 175, 80, 0.72);
             --edgedl-move-easing: cubic-bezier(0, 0, 0.2, 1);
             --edgedl-fade-easing: cubic-bezier(0.4, 0, 0.2, 1);
             --edgedl-exit-easing: cubic-bezier(0.4, 0, 1, 1);
@@ -125,7 +131,8 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
 
         .edgedl-card {
             position: relative;
-            background: #fff;
+            background: var(--edgedl-bg);
+            color: var(--edgedl-text);
             border-radius: 24px;
             padding: 20px;
             width: 260px;
@@ -149,7 +156,7 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
             margin: 8px 0 18px 0;
             font-weight: 600;
             font-size: 16px;
-            color: #333;
+            color: var(--edgedl-text);
         }
 
         .edgedl-version-tag {
@@ -159,8 +166,8 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
             font-size: 9px;
             transform: translate(0, 0);
             font-family: ui-monospace, SFMono-Regular, monospace;
-            color: #888;
-            background: rgba(0, 0, 0, 0.04);
+            color: var(--edgedl-muted);
+            background: var(--edgedl-highlight);
             padding: 2px 8px;
             border-radius: 12px;
             font-weight: 600;
@@ -183,14 +190,15 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
             padding: 10px;
             border: none;
             border-radius: 12px;
-            background: #F0F0F0;
+            background: var(--edgedl-highlight);
+            color: var(--edgedl-text);
             font-weight: 500;
             cursor: pointer;
             transition: background 0.2s;
         }
 
         .edgedl-options button:hover {
-            background: #e0e0e0;
+            background: var(--edgedl-highlight);
         }
 
         .edgedl-options img {
@@ -199,29 +207,26 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
         }
 
         .edgedl-options button.selected {
-            background: rgba(76, 175, 80, 0.12);
-            outline: 1.5px solid rgba(76, 175, 80, 0.72);
+            background: var(--edgedl-selection-bg);
+            outline: 1.5px solid var(--edgedl-selection-line);
         }
 
         @media (prefers-color-scheme: dark) {
+            :host {
+                --edgedl-bg: #292929;
+                --edgedl-highlight: #3A3A3A;
+                --edgedl-text: #FFFFFF;
+                --edgedl-muted: #d0d0d0;
+                --edgedl-selection-bg: rgba(129, 199, 132, 0.16);
+                --edgedl-selection-line: rgba(129, 199, 132, 0.82);
+            }
+
             .edgedl-card {
-                background: #292929;
-                color: #FFFFFF;
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
             }
 
             h3 {
-                color: #F5F5F5;
-            }
-
-            .edgedl-options button {
-                background: #383838;
-                color: #FFFFFF;
-            }
-
-            #edgedl-picker .edgedl-options button.selected {
-                background: rgba(129, 199, 132, 0.16);
-                outline-color: rgba(129, 199, 132, 0.82);
+                color: var(--edgedl-text);
             }
         }
 
