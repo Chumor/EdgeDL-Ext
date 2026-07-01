@@ -26,17 +26,19 @@ function isInvalidNavigationUrl(url: string) {
 
 function getDownloadUrlFromClick(target: HTMLElement) {
     const downloadTrigger = target.closest('[class*="download" i], [id*="download" i], [dt-eid*="download" i]');
-    const link = target.closest('a, [onclick], [data-ng-href], [data-href], [data-url], [data-gokey]') as HTMLAnchorElement | HTMLElement | null;
+    const link = target.closest('a, [onclick], [data-ng-href], [data-href], [data-url], [data-gokey]') as
+        HTMLAnchorElement | HTMLElement | null;
 
     let url = '';
     if (link) {
-        url = link.getAttribute('href')
-            || link.getAttribute('data-ng-href')
-            || link.getAttribute('data-href')
-            || link.getAttribute('data-gokey')?.match(/download_url=([^&]+)/)?.[1]
-            || link.getAttribute('data-url')
-            || (link as HTMLAnchorElement).href
-            || '';
+        url =
+            link.getAttribute('href') ||
+            link.getAttribute('data-ng-href') ||
+            link.getAttribute('data-href') ||
+            link.getAttribute('data-gokey')?.match(/download_url=([^&]+)/)?.[1] ||
+            link.getAttribute('data-url') ||
+            (link as HTMLAnchorElement).href ||
+            '';
     }
 
     if (isInvalidNavigationUrl(url)) {
@@ -103,16 +105,21 @@ function attachClickInterceptor() {
 }
 
 function postPageBridgeState() {
-    window.postMessage({
-        enabled: isInterceptEnabled(),
-        source: EDGEDL_MESSAGE_SOURCE,
-        type: 'intercept-state',
-    }, '*');
+    window.postMessage(
+        {
+            enabled: isInterceptEnabled(),
+            source: EDGEDL_MESSAGE_SOURCE,
+            type: 'intercept-state',
+        },
+        '*',
+    );
 }
 
 function injectPageBridgeFallback() {
     if (document.getElementById(INJECTED_BRIDGE_ID)) return;
 
+    // Fallback when manifest MAIN-world injection is not supported.
+    // page-bridge.js prevents duplicate injection.
     const script = document.createElement('script');
     script.id = INJECTED_BRIDGE_ID;
     script.src = chrome.runtime.getURL('src/page-bridge.js');
@@ -189,7 +196,7 @@ function attachRuntimeMessageListener() {
         }
 
         if (data.type === 'show-download-picker') {
-            void showDownloadPicker(() => { });
+            void showDownloadPicker(() => {});
             sendResponse({ ok: true });
             return false;
         }
@@ -202,13 +209,16 @@ function attachStorageChangeListener() {
     chrome.storage.onChanged.addListener((changes, areaName) => {
         if (areaName !== 'local' || (!changes[getInterceptSitesKey()] && !changes[DEFAULT_DOWNLOADER_KEY])) return;
 
-        void initializeInterceptState().then(postPageBridgeState).catch((error: unknown) => {
-            console.error('[EdgeDL] Failed to refresh intercept state', error);
-        });
+        void initializeInterceptState()
+            .then(postPageBridgeState)
+            .catch((error: unknown) => {
+                console.error('[EdgeDL] Failed to refresh intercept state', error);
+            });
     });
 }
 
 async function init() {
+    // Inject before async storage initialization to keep the fallback as early as possible.
     injectPageBridgeFallback();
     await initializeInterceptState();
     postPageBridgeState();
@@ -217,7 +227,6 @@ async function init() {
     attachPageCommandListener();
     attachRuntimeMessageListener();
     attachStorageChangeListener();
-
 }
 
 void init().catch((error: unknown) => {
