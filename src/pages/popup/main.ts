@@ -169,7 +169,15 @@ function renderHeader() {
 
     const enabled = !!site?.host && !site.blocked && !isEdgeDefaultDownloader();
     pill.classList.toggle('off', !enabled);
-    pill.innerHTML = `<span class="dot"></span><span>${!site?.host ? '不可用' : enabled ? '已接管' : '已暂停'}</span>`;
+    pill.replaceChildren();
+
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+
+    const label = document.createElement('span');
+    label.textContent = !site?.host ? '不可用' : enabled ? '已接管' : '已暂停';
+
+    pill.append(dot, label);
 }
 
 function renderSiteControls() {
@@ -199,13 +207,35 @@ function renderDownloaderGrid() {
     const grid = qs<HTMLElement>('#downloader-grid');
     const selected = getSelectedDownloaderValue();
 
-    grid.innerHTML = downloaderOptions.map((item) => `
-        <button class="downloader ${selected === item.value ? 'selected' : ''}" type="button" data-pkg="${item.value}" title="${item.description}">
-            <span class="check">✓</span>
-            <span class="icon-box"><img src="${item.icon}" alt="" /></span>
-            <span class="label">${item.label}</span>
-        </button>
-    `).join('');
+    grid.replaceChildren(
+        ...downloaderOptions.map((item) => {
+            const button = document.createElement('button');
+            button.className = 'downloader';
+            button.type = 'button';
+            button.dataset.pkg = item.value;
+            button.title = item.description;
+            button.classList.toggle('selected', selected === item.value);
+
+            const check = document.createElement('span');
+            check.className = 'check';
+            check.textContent = '✓';
+
+            const iconBox = document.createElement('span');
+            iconBox.className = 'icon-box';
+
+            const icon = document.createElement('img');
+            icon.src = item.icon;
+            icon.alt = '';
+            iconBox.append(icon);
+
+            const label = document.createElement('span');
+            label.className = 'label';
+            label.textContent = item.label;
+
+            button.append(check, iconBox, label);
+            return button;
+        }),
+    );
 }
 
 function renderDefaultDesc() {
@@ -213,9 +243,7 @@ function renderDefaultDesc() {
     const clearButton = qs<HTMLButtonElement>('#clear-default');
     const label = getDownloaderLabel(state.defaultDownloader);
 
-    desc.textContent = state.defaultDownloader
-        ? `默认：${label}`
-        : '下载时询问';
+    desc.textContent = state.defaultDownloader ? `默认：${label}` : '下载时询问';
 
     clearButton.disabled = !state.defaultDownloader;
 }
@@ -302,12 +330,14 @@ function bindEvents() {
             await setDefaultDownloader(button.dataset.pkg || EDGE_DOWNLOADER_VALUE);
             render();
             showToast(getDefaultDownloaderToast(state.defaultDownloader));
-        })().catch((error: unknown) => {
-            console.error('[EdgeDL] Failed to update default downloader', error);
-            showToast('保存默认下载器失败');
-        }).finally(() => {
-            setElementBusy(button, false);
-        });
+        })()
+            .catch((error: unknown) => {
+                console.error('[EdgeDL] Failed to update default downloader', error);
+                showToast('保存默认下载器失败');
+            })
+            .finally(() => {
+                setElementBusy(button, false);
+            });
     });
 
     switchButton.addEventListener('click', () => {
@@ -316,12 +346,14 @@ function bindEvents() {
             await toggleCurrentSite();
             render();
             showToast(state.siteState?.blocked ? '本站已暂停' : '本站已接管');
-        })().catch((error: unknown) => {
-            console.error('[EdgeDL] Failed to toggle site state', error);
-            showToast('切换站点状态失败');
-        }).finally(() => {
-            setElementBusy(switchButton, false);
-        });
+        })()
+            .catch((error: unknown) => {
+                console.error('[EdgeDL] Failed to toggle site state', error);
+                showToast('切换站点状态失败');
+            })
+            .finally(() => {
+                setElementBusy(switchButton, false);
+            });
     });
 
     openPickerButton.addEventListener('click', () => {
@@ -336,12 +368,14 @@ function bindEvents() {
             setElementBusy(refreshButton, true);
             await refreshState();
             showToast('状态已刷新');
-        })().catch((error: unknown) => {
-            console.error('[EdgeDL] Failed to refresh state', error);
-            showToast('刷新失败');
-        }).finally(() => {
-            setElementBusy(refreshButton, false);
-        });
+        })()
+            .catch((error: unknown) => {
+                console.error('[EdgeDL] Failed to refresh state', error);
+                showToast('刷新失败');
+            })
+            .finally(() => {
+                setElementBusy(refreshButton, false);
+            });
     });
 
     clearButton.addEventListener('click', () => {
@@ -351,12 +385,14 @@ function bindEvents() {
             state.defaultDownloader = null;
             render();
             showToast('已清除默认');
-        })().catch((error: unknown) => {
-            console.error('[EdgeDL] Failed to clear default downloader', error);
-            showToast('默认下载器清除失败');
-        }).finally(() => {
-            setElementBusy(clearButton, false);
-        });
+        })()
+            .catch((error: unknown) => {
+                console.error('[EdgeDL] Failed to clear default downloader', error);
+                showToast('默认下载器清除失败');
+            })
+            .finally(() => {
+                setElementBusy(clearButton, false);
+            });
     });
 
     closeButton.addEventListener('click', () => window.close());
