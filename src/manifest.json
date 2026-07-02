@@ -10,7 +10,7 @@
         "32": "assets/logo-32.png",
         "128": "assets/logo.png"
     },
-    "permissions": ["storage", "tabs"],
+    "permissions": ["storage", "activeTab"],
     "host_permissions": ["<all_urls>"],
     "background": {
         "service_worker": "src/background.js",
@@ -39,7 +39,7 @@
     ],
     "web_accessible_resources": [
         {
-            "resources": ["src/page-bridge.js", "assets/downloader-icons/*.svg"],
+            "resources": ["assets/downloader-icons/*.svg"],
             "matches": ["<all_urls>"]
         }
     ]

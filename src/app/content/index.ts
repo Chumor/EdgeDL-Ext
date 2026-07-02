@@ -16,8 +16,10 @@ import { extractUrlFromOnclick } from '@/pkg/utils/url';
 import { EDGEDL_MESSAGE_SOURCE, isDownloadRequestMessage } from '@/pkg/browser/messages';
 import { DEFAULT_DOWNLOADER_KEY } from '@/pkg/services/config';
 
-const INJECTED_BRIDGE_ID = 'edgedl-page-bridge-script';
 const POPUP_COMMAND_SOURCE = 'edgedl-popup-command';
+const TRUSTED_GESTURE_WINDOW_MS = 1500;
+
+let lastTrustedGestureAt = 0;
 
 function isInvalidNavigationUrl(url: string) {
     const value = url.trim().toLowerCase();
@@ -100,7 +102,18 @@ function handleClick(event: MouseEvent) {
     });
 }
 
+function markTrustedGesture(event: PointerEvent | TouchEvent | MouseEvent | KeyboardEvent) {
+    if (event.isTrusted) lastTrustedGestureAt = Date.now();
+}
+
+function hasRecentTrustedGesture() {
+    return Date.now() - lastTrustedGestureAt <= TRUSTED_GESTURE_WINDOW_MS;
+}
+
 function attachClickInterceptor() {
+    document.addEventListener('pointerdown', markTrustedGesture, true);
+    document.addEventListener('touchstart', markTrustedGesture, true);
+    document.addEventListener('keydown', markTrustedGesture, true);
     document.addEventListener('click', handleClick, true);
 }
 
@@ -114,23 +127,10 @@ function postPageBridgeState() {
         '*',
     );
 }
-
-function injectPageBridgeFallback() {
-    if (document.getElementById(INJECTED_BRIDGE_ID)) return;
-
-    // Fallback when manifest MAIN-world injection is not supported.
-    // page-bridge.js prevents duplicate injection.
-    const script = document.createElement('script');
-    script.id = INJECTED_BRIDGE_ID;
-    script.src = chrome.runtime.getURL('src/page-bridge.js');
-    script.onload = () => script.remove();
-
-    (document.documentElement || document.head || document.body).appendChild(script);
-}
-
 function attachPageBridgeMessageListener() {
     window.addEventListener('message', (event) => {
         if (event.source !== window || !isDownloadRequestMessage(event.data)) return;
+        if (!hasRecentTrustedGesture()) return;
 
         void handleDownloadCandidate(event.data.url, { showSkippedToast: false });
     });
@@ -151,20 +151,6 @@ async function toggleCurrentSite() {
     showToast(blocked ? '已禁止接管本站' : '已允许接管本站', { duration: 1500, type: 'info' });
 
     return { blocked, host };
-}
-
-function attachPageCommandListener() {
-    window.addEventListener('message', (event) => {
-        if (event.source !== window) return;
-        const data = event.data as Record<PropertyKey, unknown> | undefined;
-        if (!data || data.source !== POPUP_COMMAND_SOURCE) return;
-
-        if (data.type === 'toggle-current-site') {
-            void toggleCurrentSite().catch((error: unknown) => {
-                console.error('[EdgeDL] Failed to toggle current site', error);
-            });
-        }
-    });
 }
 
 function attachRuntimeMessageListener() {
@@ -218,13 +204,10 @@ function attachStorageChangeListener() {
 }
 
 async function init() {
-    // Inject before async storage initialization to keep the fallback as early as possible.
-    injectPageBridgeFallback();
     await initializeInterceptState();
     postPageBridgeState();
     attachClickInterceptor();
     attachPageBridgeMessageListener();
-    attachPageCommandListener();
     attachRuntimeMessageListener();
     attachStorageChangeListener();
 }
