@@ -34,8 +34,9 @@ export async function requestDownload(url: string): Promise<DownloadRequestResul
     }
 
     if (downloader) {
-        await openDownload(url, downloader);
-        return { type: 'external' };
+        if (openDownload(url, downloader)) return { type: 'external' };
+
+        await storage.remove(DEFAULT_DOWNLOADER_KEY);
     }
 
     const selected = await new Promise<DownloadPickerResult>((resolve) => {
@@ -43,8 +44,10 @@ export async function requestDownload(url: string): Promise<DownloadRequestResul
     });
 
     if (selected.type === 'external') {
-        await openDownload(url, selected.packageName);
-        return { type: 'external' };
+        if (openDownload(url, selected.packageName)) return { type: 'external' };
+
+        await storage.remove(DEFAULT_DOWNLOADER_KEY);
+        return { type: 'cancel' };
     }
 
     return selected;

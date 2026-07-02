@@ -6,7 +6,7 @@ import { buildIntentUrl } from '../../src/pkg/core/intent/index.ts';
 test('builds https Android intent URLs for a target downloader package', () => {
     assert.equal(
         buildIntentUrl('https://example.com/app.apk?token=abc#section', 'idm.internet.download.manager'),
-        'intent://example.com/app.apk?token=abc#section#Intent;scheme=https;package=idm.internet.download.manager;type=*/*;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end',
+        'intent://example.com/app.apk?token=abc#Intent;scheme=https;package=idm.internet.download.manager;type=*/*;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end',
     );
 });
 

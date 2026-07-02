@@ -21,6 +21,62 @@ export interface CancelDownloadPickerResult {
 
 export type DownloadPickerResult = CancelDownloadPickerResult | EdgeDownloadPickerResult | ExternalDownloadPickerResult;
 
+interface DownloaderOption {
+    icon: string;
+    label: string;
+    packageName: string;
+}
+
+const DOWNLOADER_OPTIONS: DownloaderOption[] = [
+    { icon: downloaderIcons.IDM, label: '1DM', packageName: DOWNLOADERS.IDM },
+    { icon: downloaderIcons.IDM_PLUS, label: '1DM+', packageName: DOWNLOADERS.IDM_PLUS },
+    { icon: downloaderIcons.ADM, label: 'ADM', packageName: DOWNLOADERS.ADM },
+    { icon: downloaderIcons.ABDM, label: 'ABDM', packageName: DOWNLOADERS.ABDM },
+    { icon: downloaderIcons.FDM, label: 'FDM', packageName: DOWNLOADERS.FDM },
+    { icon: downloaderIcons.EDGE, label: 'Edge', packageName: EDGE_DOWNLOADER_VALUE },
+];
+
+function createPickerContent(shadow: ShadowRoot) {
+    const background = document.createElement('div');
+    background.className = 'edgedl-bg';
+
+    const card = document.createElement('div');
+    card.className = 'edgedl-card';
+
+    const heading = document.createElement('h3');
+    heading.textContent = '选择下载器';
+
+    const versionTag = document.createElement('div');
+    versionTag.className = 'edgedl-version-tag';
+    versionTag.textContent = `EdgeDL v${getEdgeDLVersion()}`;
+
+    const options = document.createElement('div');
+    options.className = 'edgedl-options';
+
+    for (const option of DOWNLOADER_OPTIONS) {
+        const button = document.createElement('button');
+        button.dataset.pkg = option.packageName;
+
+        const icon = document.createElement('img');
+        icon.alt = '';
+        icon.src = option.icon;
+
+        button.append(icon, document.createTextNode(option.label));
+        options.appendChild(button);
+    }
+
+    const label = document.createElement('label');
+    label.className = 'edgedl-default-label';
+
+    const checkbox = document.createElement('input');
+    checkbox.id = 'edgedl-set-default';
+    checkbox.type = 'checkbox';
+
+    label.append(checkbox, document.createTextNode('设为默认下载器'));
+    card.append(heading, versionTag, options, label);
+    shadow.append(background, card);
+}
+
 export async function showDownloadPicker(callback: (result: DownloadPickerResult) => void) {
     if (document.getElementById('edgedl-picker')) {
         callback({ type: 'cancel' });
@@ -32,36 +88,7 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
     picker.classList.add('initializing');
 
     const shadow = picker.attachShadow({ mode: 'open' });
-    shadow.innerHTML = `
-        <div class="edgedl-bg"></div>
-        <div class="edgedl-card">
-            <h3>选择下载器</h3>
-            <div class="edgedl-version-tag">EdgeDL v${getEdgeDLVersion()}</div>
-            <div class="edgedl-options">
-                <button data-pkg="${DOWNLOADERS.IDM}">
-                    <img src="${downloaderIcons.IDM}" /> 1DM
-                </button>
-                <button data-pkg="${DOWNLOADERS.IDM_PLUS}">
-                    <img src="${downloaderIcons.IDM_PLUS}" /> 1DM+
-                </button>
-                <button data-pkg="${DOWNLOADERS.ADM}">
-                    <img src="${downloaderIcons.ADM}" /> ADM
-                </button>
-                <button data-pkg="${DOWNLOADERS.ABDM}">
-                    <img src="${downloaderIcons.ABDM}" /> ABDM
-                </button>
-                <button data-pkg="${DOWNLOADERS.FDM}">
-                    <img src="${downloaderIcons.FDM}" /> FDM
-                </button>
-                <button data-pkg="${EDGE_DOWNLOADER_VALUE}">
-                    <img src="${downloaderIcons.EDGE}" /> Edge
-                </button>
-            </div>
-            <label style="margin-top: 12px; display: flex; align-items: center; gap: 6px; font-size: 13px;">
-                <input type="checkbox" id="edgedl-set-default" /> 设为默认下载器
-            </label>
-        </div>
-    `;
+    createPickerContent(shadow);
 
     document.documentElement.appendChild(picker);
 
@@ -206,6 +233,14 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
             height: 24px;
         }
 
+        .edgedl-default-label {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
         .edgedl-options button.selected {
             background: var(--edgedl-selection-bg);
             outline: 1.5px solid var(--edgedl-selection-line);
@@ -269,73 +304,81 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
     `;
     shadow.appendChild(style);
 
-    // 读取默认下载器
-    const defaultDownloader = await storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null);
-    const defaultCheckbox = shadow.querySelector('#edgedl-set-default') as HTMLInputElement;
-    if (defaultCheckbox) defaultCheckbox.checked = !!defaultDownloader;
+    try {
+        // 读取默认下载器
+        const defaultDownloader = await storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null);
+        const defaultCheckbox = shadow.querySelector('#edgedl-set-default') as HTMLInputElement | null;
+        if (!defaultCheckbox) throw new Error('Default downloader checkbox is missing');
 
-    if (defaultDownloader) {
-        // 高亮默认下载器按钮
-        const defaultBtn = shadow.querySelector(`button[data-pkg="${defaultDownloader}"]`) as HTMLButtonElement | null;
-        if (defaultBtn) defaultBtn.classList.add('selected');
+        defaultCheckbox.checked = !!defaultDownloader;
+
+        if (defaultDownloader) {
+            // 高亮默认下载器按钮
+            const defaultBtn = shadow.querySelector(`button[data-pkg="${defaultDownloader}"]`) as HTMLButtonElement | null;
+            if (defaultBtn) defaultBtn.classList.add('selected');
+        }
+
+        // 取消勾选时清除默认下载器
+        defaultCheckbox.addEventListener('change', async () => {
+            if (!defaultCheckbox.checked) {
+                await storage.remove(DEFAULT_DOWNLOADER_KEY);
+                shadow.querySelector('button.selected')?.classList.remove('selected');
+            }
+        });
+
+        // 点击唤起
+        shadow.querySelectorAll('button').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const pkg = btn.dataset.pkg || '';
+
+                // 按当前选择更新默认下载器
+                if (defaultCheckbox.checked) {
+                    await storage.set(DEFAULT_DOWNLOADER_KEY, pkg);
+                }
+
+                if (pkg === EDGE_DOWNLOADER_VALUE) {
+                    callback({ type: 'edge' });
+                } else {
+                    callback({ packageName: pkg, type: 'external' });
+                }
+
+                gotoClose(false);
+            });
+        });
+
+        picker.classList.remove('initializing');
+    } catch (error) {
+        console.error('[EdgeDL] Failed to initialize download picker', error);
+        cleanupPicker();
+        callback({ type: 'cancel' });
     }
 
-    // 取消勾选时清除默认下载器
-    defaultCheckbox.addEventListener('change', async () => {
-        if (!defaultCheckbox.checked) {
-            await storage.remove(DEFAULT_DOWNLOADER_KEY);
-            shadow.querySelector('button.selected')?.classList.remove('selected');
+    let removed = false;
+    function cleanupPicker() {
+        if (removed) return;
+        removed = true;
+        if (window.visualViewport) {
+            window.visualViewport.removeEventListener('resize', layoutPicker);
+            window.visualViewport.removeEventListener('scroll', layoutPicker);
         }
-    });
-
-    // 点击唤起
-    shadow.querySelectorAll('button').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-            const pkg = btn.dataset.pkg || '';
-
-            // 按当前选择更新默认下载器
-            if (defaultCheckbox.checked) {
-                await storage.set(DEFAULT_DOWNLOADER_KEY, pkg);
-            }
-
-            if (pkg === EDGE_DOWNLOADER_VALUE) {
-                callback({ type: 'edge' });
-            } else {
-                callback({ packageName: pkg, type: 'external' });
-            }
-
-            gotoClose(false);
-        });
-    });
-
-    picker.classList.remove('initializing');
+        picker.remove();
+        window.dispatchEvent(new CustomEvent('edgedl:picker-closed'));
+    }
 
     function gotoClose(cancelled = true) {
         if (picker.classList.contains('closing')) return;
         if (cancelled) callback({ type: 'cancel' });
         picker.classList.add('closing');
 
-        let removed = false;
-        const removePicker = () => {
-            if (removed) return;
-            removed = true;
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', layoutPicker);
-                window.visualViewport.removeEventListener('scroll', layoutPicker);
-            }
-            picker.remove();
-            window.dispatchEvent(new CustomEvent('edgedl:picker-closed'));
-        };
-
-        const card = shadow.querySelector('.edgedl-card') as HTMLDivElement;
+        const card = shadow.querySelector('.edgedl-card') as HTMLDivElement | null;
         const onAnimationEnd = (event: AnimationEvent) => {
-            if (event.target !== card) return;
+            if (!card || event.target !== card) return;
             card.removeEventListener('animationend', onAnimationEnd);
-            removePicker();
+            cleanupPicker();
         };
 
         card?.addEventListener('animationend', onAnimationEnd);
-        window.setTimeout(removePicker, 260);
+        window.setTimeout(cleanupPicker, 260);
     }
 
     shadow.querySelector('.edgedl-bg')?.addEventListener('click', () => gotoClose());

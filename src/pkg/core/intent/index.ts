@@ -17,7 +17,10 @@
  * @returns {string} 封装后的 intent:// 协议字符串
  */
 export function buildIntentUrl(url: string, packageName: string): string {
-    const scheme = url.startsWith('https') ? 'https' : 'http';
-    const path = url.replace(/^https?:\/\//, '');
+    const parsed = new URL(url);
+    const scheme = parsed.protocol === 'https:' ? 'https' : 'http';
+    parsed.hash = '';
+    const path = parsed.href.replace(/^https?:\/\//, '');
+
     return `intent://${path}#Intent;scheme=${scheme};package=${packageName};type=*/*;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
 }

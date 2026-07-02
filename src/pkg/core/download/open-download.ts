@@ -11,17 +11,18 @@ import { DOWNLOADERS } from '@/pkg/services/config';
  * @async
  * @param {string} url - 目标下载链接
  * @param {string} downloader - 外部下载器包名
- * @returns {Promise<void>}
+ * @returns {boolean} 是否成功匹配并唤起下载器
  */
-export async function openDownload(url: string, downloader: string) {
+export function openDownload(url: string, downloader: string) {
     const launcherKey = (Object.keys(DOWNLOADERS) as Array<keyof typeof DOWNLOADERS>).find(
         (key) => DOWNLOADERS[key] === downloader,
     );
     if (!launcherKey) {
-        showToast('无法打开选择器');
-        return;
+        showToast('无法打开下载器');
+        return false;
     }
 
     showToast(`${launcherKey} 正在唤起`);
     openDownloader(url, launcherKey);
+    return true;
 }

@@ -31,3 +31,11 @@ test('detects known redirect download pages', () => {
     assert.equal(isDownloadLink('https://game.gtimg.cn/images/zlkdatasys/mct/proj_123/download.shtml'), true);
     assert.equal(isDownloadLink('https://game.gtimg.cn/images/zlkdatasys/mct/d/package-name.shtml?foo=bar'), true);
 });
+
+
+test('ignores weak asset and media routes without stronger download signals', () => {
+    assert.equal(isDownloadLink('https://example.com/assets/page'), false);
+    assert.equal(isDownloadLink('https://example.com/media/gallery'), false);
+    assert.equal(isDownloadLink('https://example.com/cdn/help'), false);
+    assert.equal(isDownloadLink('https://example.com/dist/docs'), false);
+});
