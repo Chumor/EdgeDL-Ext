@@ -1,8 +1,6 @@
 dist/
 node_modules/
 coverage/
-*.crx
 *.pem
-*.zip
 .env
 .env.*

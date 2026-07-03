@@ -7,7 +7,8 @@
     "private": true,
     "scripts": {
         "build": "node node_modules/rollup/dist/bin/rollup -c && node scripts/copy-static.mjs",
-        "clean": "rm -rf dist",
+        "dev": "node scripts/dev.js",
+        "pack": "node scripts/pack.js",
         "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
         "tree": "find . -path ./node_modules -prune -o -path ./dist -prune -o -print | sort",
         "lint": "npm run typecheck && node node_modules/eslint/bin/eslint.js .",

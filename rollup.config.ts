@@ -4,10 +4,10 @@ import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 
 const entries = [
-    ['src/app/content/index.ts', 'dist/src/content.js', 'EdgeDLContent'],
-    ['src/app/page-bridge/index.ts', 'dist/src/page-bridge.js', 'EdgeDLPageBridge'],
-    ['src/app/background/index.ts', 'dist/src/background.js', 'EdgeDLBackground'],
-    ['src/pages/popup/main.ts', 'dist/src/popup.js', 'EdgeDLPopup'],
+    ['src/app/content/index.ts', 'dist/ext/src/content.js', 'EdgeDLContent'],
+    ['src/app/page-bridge/index.ts', 'dist/ext/src/page-bridge.js', 'EdgeDLPageBridge'],
+    ['src/app/background/index.ts', 'dist/ext/src/background.js', 'EdgeDLBackground'],
+    ['src/pages/popup/main.ts', 'dist/ext/src/popup.js', 'EdgeDLPopup'],
 ] as const;
 
 function createConfig(input: string, file: string, name: string) {
