@@ -10,7 +10,7 @@
         "32": "assets/logo-32.png",
         "128": "assets/logo.png"
     },
-    "permissions": ["storage", "activeTab"],
+    "permissions": ["storage", "tabs"],
     "host_permissions": ["<all_urls>"],
     "background": {
         "service_worker": "src/background.js",

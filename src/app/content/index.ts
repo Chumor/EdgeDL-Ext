@@ -159,12 +159,15 @@ function attachRuntimeMessageListener() {
         if (!data || data.source !== POPUP_COMMAND_SOURCE) return false;
 
         if (data.type === 'toggle-current-site') {
-            void toggleCurrentSite()
-                .then((result) => sendResponse({ ok: true, ...result }))
-                .catch((error: unknown) => {
+            void (async () => {
+                try {
+                    const result = await toggleCurrentSite();
+                    sendResponse({ ok: true, ...result });
+                } catch (error: unknown) {
                     console.error('[EdgeDL] Failed to toggle current site from runtime message', error);
                     sendResponse({ ok: false });
-                });
+                }
+            })();
             return true;
         }
 
@@ -195,11 +198,14 @@ function attachStorageChangeListener() {
     chrome.storage.onChanged.addListener((changes, areaName) => {
         if (areaName !== 'local' || (!changes[getInterceptSitesKey()] && !changes[DEFAULT_DOWNLOADER_KEY])) return;
 
-        void initializeInterceptState()
-            .then(postPageBridgeState)
-            .catch((error: unknown) => {
+        void (async () => {
+            try {
+                await initializeInterceptState();
+                postPageBridgeState();
+            } catch (error: unknown) {
                 console.error('[EdgeDL] Failed to refresh intercept state', error);
-            });
+            }
+        })();
     });
 }
 
