@@ -19,6 +19,7 @@ on:
       - "rollup.config.*"
       - "tsconfig.json"
       - ".github/workflows/build.yml"
+      - ".github/workflows/release.yml"
 
   pull_request:
     paths:
@@ -33,6 +34,7 @@ on:
       - "rollup.config.*"
       - "tsconfig.json"
       - ".github/workflows/build.yml"
+      - ".github/workflows/release.yml"
 
 permissions:
   contents: read
