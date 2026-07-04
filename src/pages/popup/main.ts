@@ -98,6 +98,26 @@ function setElementBusy(element: HTMLButtonElement, busy: boolean) {
     element.style.cursor = busy ? 'wait' : '';
 }
 
+interface PopupActionOptions {
+    busyElement?: HTMLButtonElement;
+    failureMessage: string;
+    logMessage: string;
+}
+
+async function runPopupAction(action: () => Promise<void>, options: PopupActionOptions) {
+    const { busyElement, failureMessage, logMessage } = options;
+    if (busyElement) setElementBusy(busyElement, true);
+
+    try {
+        await action();
+    } catch (error: unknown) {
+        console.error(logMessage, error);
+        showToast(failureMessage);
+    } finally {
+        if (busyElement) setElementBusy(busyElement, false);
+    }
+}
+
 let toastTimer: number | undefined;
 function showToast(message: string) {
     const toast = qs<HTMLElement>('#toast');
@@ -325,78 +345,70 @@ function bindEvents() {
         const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('button[data-pkg]');
         if (!button) return;
 
-        void (async () => {
-            setElementBusy(button, true);
-            try {
+        void runPopupAction(
+            async () => {
                 await setDefaultDownloader(button.dataset.pkg || EDGE_DOWNLOADER_VALUE);
                 render();
                 showToast(getDefaultDownloaderToast(state.defaultDownloader));
-            } catch (error: unknown) {
-                console.error('[EdgeDL] Failed to update default downloader', error);
-                showToast('保存默认下载器失败');
-            } finally {
-                setElementBusy(button, false);
-            }
-        })();
+            },
+            {
+                busyElement: button,
+                failureMessage: '保存默认下载器失败',
+                logMessage: '[EdgeDL] Failed to update default downloader',
+            },
+        );
     });
 
     switchButton.addEventListener('click', () => {
-        void (async () => {
-            setElementBusy(switchButton, true);
-            try {
+        void runPopupAction(
+            async () => {
                 await toggleCurrentSite();
                 render();
                 showToast(state.siteState?.blocked ? '本站已暂停' : '本站已接管');
-            } catch (error: unknown) {
-                console.error('[EdgeDL] Failed to toggle site state', error);
-                showToast('切换站点状态失败');
-            } finally {
-                setElementBusy(switchButton, false);
-            }
-        })();
+            },
+            {
+                busyElement: switchButton,
+                failureMessage: '切换站点状态失败',
+                logMessage: '[EdgeDL] Failed to toggle site state',
+            },
+        );
     });
 
     openPickerButton.addEventListener('click', () => {
-        void (async () => {
-            try {
-                await openPagePicker();
-            } catch (error: unknown) {
-                console.error('[EdgeDL] Failed to open page picker', error);
-                showToast('无法打开选择器');
-            }
-        })();
+        void runPopupAction(openPagePicker, {
+            failureMessage: '无法打开选择器',
+            logMessage: '[EdgeDL] Failed to open page picker',
+        });
     });
 
     refreshButton.addEventListener('click', () => {
-        void (async () => {
-            setElementBusy(refreshButton, true);
-            try {
+        void runPopupAction(
+            async () => {
                 await refreshState();
                 showToast('状态已刷新');
-            } catch (error: unknown) {
-                console.error('[EdgeDL] Failed to refresh state', error);
-                showToast('刷新失败');
-            } finally {
-                setElementBusy(refreshButton, false);
-            }
-        })();
+            },
+            {
+                busyElement: refreshButton,
+                failureMessage: '刷新失败',
+                logMessage: '[EdgeDL] Failed to refresh state',
+            },
+        );
     });
 
     clearButton.addEventListener('click', () => {
-        void (async () => {
-            setElementBusy(clearButton, true);
-            try {
+        void runPopupAction(
+            async () => {
                 await storage.remove(DEFAULT_DOWNLOADER_KEY);
                 state.defaultDownloader = null;
                 render();
                 showToast('已清除默认');
-            } catch (error: unknown) {
-                console.error('[EdgeDL] Failed to clear default downloader', error);
-                showToast('默认下载器清除失败');
-            } finally {
-                setElementBusy(clearButton, false);
-            }
-        })();
+            },
+            {
+                busyElement: clearButton,
+                failureMessage: '默认下载器清除失败',
+                logMessage: '[EdgeDL] Failed to clear default downloader',
+            },
+        );
     });
 
     closeButton.addEventListener('click', () => window.close());
