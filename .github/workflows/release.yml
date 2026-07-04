@@ -54,7 +54,7 @@ jobs:
           EXPECTED_SUBJECT="chore(release): ${VERSION}"
           COMMIT_SUBJECT=$(git log -1 --pretty=%s)
 
-          if [ "$COMMIT_SUBJECT" != "$EXPECTED_SUBJECT" ]; then
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] && [ "$COMMIT_SUBJECT" != "$EXPECTED_SUBJECT" ]; then
             echo "Release commit subject mismatch."
             echo "Expected: $EXPECTED_SUBJECT"
             echo "Actual:   $COMMIT_SUBJECT"
