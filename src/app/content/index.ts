@@ -1,6 +1,6 @@
 import { showDownloadPicker } from '@/pages/components/download-picker';
 import { showToast } from '@/pages/components/toast';
-import { isDownloadLink } from '@/pkg/core/detector';
+import { DOWNLOAD_CONTROL_SELECTOR, isDownloadCandidate, isDownloadControl, isDownloadLink } from '@/pkg/core/detector';
 import { requestDownload } from '@/pkg/core/download';
 import {
     getControlledHostname,
@@ -26,10 +26,19 @@ function isInvalidNavigationUrl(url: string) {
     return !value || value === '#' || value === '##' || value.startsWith('javascript:');
 }
 
-function getDownloadUrlFromClick(target: HTMLElement) {
-    const downloadTrigger = target.closest('[class*="download" i], [id*="download" i], [dt-eid*="download" i]');
-    const link = target.closest('a, [onclick], [data-ng-href], [data-href], [data-url], [data-gokey]') as
-        HTMLAnchorElement | HTMLElement | null;
+interface DownloadClickCandidate {
+    url: string;
+    explicit: boolean;
+}
+
+function getDownloadUrlFromClick(target: HTMLElement): DownloadClickCandidate {
+    const control = target.closest(DOWNLOAD_CONTROL_SELECTOR);
+    const downloadTrigger =
+        target.closest('[class*="download" i], [id*="download" i], [dt-eid*="download" i]') || control;
+    const link = target.closest(
+        'a, button, [role="button"], [onclick], [data-ng-href], [data-href], [data-url], [data-gokey], [data-download-url], [data-download-href], [data-download-link]',
+    ) as HTMLElement | null;
+    const explicit = isDownloadControl(control);
 
     let url = '';
     if (link) {
@@ -38,6 +47,9 @@ function getDownloadUrlFromClick(target: HTMLElement) {
             link.getAttribute('data-ng-href') ||
             link.getAttribute('data-href') ||
             link.getAttribute('data-gokey')?.match(/download_url=([^&]+)/)?.[1] ||
+            link.getAttribute('data-download-url') ||
+            link.getAttribute('data-download-href') ||
+            link.getAttribute('data-download-link') ||
             link.getAttribute('data-url') ||
             (link as HTMLAnchorElement).href ||
             '';
@@ -52,14 +64,55 @@ function getDownloadUrlFromClick(target: HTMLElement) {
     }
 
     if (isInvalidNavigationUrl(url) && downloadTrigger && isDownloadLink(location.href)) {
-        return location.href;
+        url = location.href;
     }
 
-    return normalizeUrl(url);
+    return { url: normalizeUrl(url), explicit };
 }
 
-async function handleDownloadCandidate(url: string, options: { showSkippedToast: boolean }) {
-    if (!url || !isDownloadLink(url)) return false;
+function allowPageNavigation(url: string) {
+    const requestId =
+        typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    return new Promise<void>((resolve) => {
+        let timeoutId = 0;
+
+        const finish = () => {
+            window.clearTimeout(timeoutId);
+            window.removeEventListener('message', handleAcknowledgement);
+            resolve();
+        };
+        const handleAcknowledgement = (event: MessageEvent) => {
+            if (event.source !== window) return;
+
+            const data = event.data as Record<PropertyKey, unknown> | undefined;
+            if (
+                data?.source === EDGEDL_MESSAGE_SOURCE &&
+                data.type === 'navigation-allowed' &&
+                data.requestId === requestId
+            ) {
+                finish();
+            }
+        };
+
+        window.addEventListener('message', handleAcknowledgement);
+        window.postMessage(
+            {
+                source: EDGEDL_MESSAGE_SOURCE,
+                type: 'allow-navigation',
+                requestId,
+                url,
+            },
+            '*',
+        );
+        timeoutId = window.setTimeout(finish, 250);
+    });
+}
+
+async function handleDownloadCandidate(candidate: DownloadClickCandidate, options: { showSkippedToast: boolean }) {
+    if (!isDownloadCandidate(candidate.url, candidate.explicit)) return false;
 
     if (!isInterceptEnabled()) {
         if (options.showSkippedToast) {
@@ -68,16 +121,17 @@ async function handleDownloadCandidate(url: string, options: { showSkippedToast:
         return false;
     }
 
-    const result = await requestDownload(url);
+    const result = await requestDownload(candidate.url);
     if (result.type === 'edge') {
-        location.href = url;
+        await allowPageNavigation(candidate.url);
+        location.href = candidate.url;
     }
 
     return true;
 }
 
-async function dispatchDownload(url: string) {
-    await handleDownloadCandidate(url, { showSkippedToast: true });
+async function dispatchDownload(candidate: DownloadClickCandidate) {
+    await handleDownloadCandidate(candidate, { showSkippedToast: true });
 }
 
 function handleClick(event: MouseEvent) {
@@ -85,8 +139,8 @@ function handleClick(event: MouseEvent) {
     if (!target?.closest) return;
     if (target.closest('label.hope-checkbox, .hope-checkbox, .hope-checkbox__control, input[type="checkbox"]')) return;
 
-    const url = getDownloadUrlFromClick(target);
-    if (!url || !isDownloadLink(url)) return;
+    const candidate = getDownloadUrlFromClick(target);
+    if (!isDownloadCandidate(candidate.url, candidate.explicit)) return;
 
     if (!isInterceptEnabled()) {
         showToast('已跳过接管', { duration: 1500, type: 'info' });
@@ -97,13 +151,14 @@ function handleClick(event: MouseEvent) {
     event.stopPropagation();
     event.stopImmediatePropagation();
 
-    void dispatchDownload(url).catch((error: unknown) => {
+    void dispatchDownload(candidate).catch((error: unknown) => {
         console.error('[EdgeDL] Failed to handle download click', error);
     });
 }
 
 function markTrustedGesture(event: PointerEvent | TouchEvent | MouseEvent | KeyboardEvent) {
-    if (event.isTrusted) lastTrustedGestureAt = Date.now();
+    if (!event.isTrusted) return;
+    lastTrustedGestureAt = Date.now();
 }
 
 function hasRecentTrustedGesture() {
@@ -132,7 +187,10 @@ function attachPageBridgeMessageListener() {
         if (event.source !== window || !isDownloadRequestMessage(event.data)) return;
         if (!hasRecentTrustedGesture()) return;
 
-        void handleDownloadCandidate(event.data.url, { showSkippedToast: false });
+        void handleDownloadCandidate(
+            { url: event.data.url, explicit: event.data.explicitControl === true },
+            { showSkippedToast: false },
+        );
     });
 }
 

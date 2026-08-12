@@ -4,6 +4,7 @@ export interface DownloadRequestMessage {
     source: typeof EDGEDL_MESSAGE_SOURCE;
     type: 'download-request';
     url: string;
+    explicitControl?: boolean;
 }
 
 export function isDownloadRequestMessage(value: unknown): value is DownloadRequestMessage {
