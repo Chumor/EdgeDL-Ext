@@ -40,7 +40,7 @@ export async function requestDownload(url: string): Promise<DownloadRequestResul
     }
 
     const selected = await new Promise<DownloadPickerResult>((resolve) => {
-        void showDownloadPicker(resolve);
+        void showDownloadPicker(resolve, { downloadUrl: url });
     });
 
     if (selected.type === 'external') {
