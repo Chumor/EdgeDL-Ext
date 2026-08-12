@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "EdgeDL",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "author": "Chumor",
     "short_name": "EdgeDL",
     "description": "在 Android 版 Microsoft Edge 中识别用户点击的下载链接，并交给用户选择的外部下载器处理，可随时切回 Edge 默认下载器",
