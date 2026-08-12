@@ -105,10 +105,53 @@ const REDIRECT_DOWNLOAD_PAGES = [
     /\/zlkdatasys\/mct\/(?:d\/[^#/?]+|proj_\d+\/download)\.shtml(?:[#?].*)?$/i,
 ];
 
+export const DOWNLOAD_CONTROL_SELECTOR = [
+    '[download]',
+    '[auto-inspect-button-type="download" i]',
+    '[data-action="download" i]',
+    '[data-command="download" i]',
+    '[data-purpose="download" i]',
+    '[data-type="download" i]',
+    '[data-download-url]',
+    '[data-download-href]',
+    '[data-download-link]',
+].join(', ');
+
+const DOWNLOAD_VALUE_ATTRIBUTES = [
+    'auto-inspect-button-type',
+    'data-action',
+    'data-command',
+    'data-purpose',
+    'data-type',
+];
+const DOWNLOAD_URL_ATTRIBUTES = ['data-download-url', 'data-download-href', 'data-download-link'];
+
+/**
+ * Determines whether an element explicitly represents a download control.
+ * URL analysis remains separate because many sites use extensionless download endpoints.
+ */
+export function isDownloadControl(element: Pick<Element, 'hasAttribute' | 'getAttribute'> | null) {
+    if (!element) return false;
+    if (element.hasAttribute('download')) return true;
+
+    if (DOWNLOAD_VALUE_ATTRIBUTES.some((name) => element.getAttribute(name)?.toLowerCase() === 'download')) return true;
+    if (DOWNLOAD_URL_ATTRIBUTES.some((name) => Boolean(element.getAttribute(name)))) return true;
+
+    return false;
+}
+
+function isHttpUrl(url: string) {
+    return /^https?:\/\//i.test(url);
+}
+
+export function isDownloadCandidate(url: string, explicitControl = false) {
+    return isHttpUrl(url) && (explicitControl || isDownloadLink(url));
+}
+
 // 下载链接检测
 export function isDownloadLink(url: string) {
     if (url?.includes('sourceforge.net/projects/') && url.includes('/files/')) return false;
-    if (!url || !url.startsWith('http')) return false;
+    if (!url || !isHttpUrl(url)) return false;
     const lowerUrl = url.toLowerCase();
 
     // 排除非下载页面
