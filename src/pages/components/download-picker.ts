@@ -573,8 +573,9 @@ export async function showDownloadPicker(
         shadow.querySelectorAll<HTMLButtonElement>('.edgedl-options button').forEach((btn) => {
             btn.addEventListener('click', async () => {
                 const pkg = btn.dataset.pkg || '';
-                shadow.querySelector<HTMLButtonElement>('button.selected')?.setAttribute('aria-pressed', 'false');
-                shadow.querySelector<HTMLButtonElement>('button.selected')?.classList.remove('selected');
+                const selectedButton = shadow.querySelector<HTMLButtonElement>('button.selected');
+                selectedButton?.setAttribute('aria-pressed', 'false');
+                selectedButton?.classList.remove('selected');
                 btn.classList.add('selected');
                 btn.setAttribute('aria-pressed', 'true');
 

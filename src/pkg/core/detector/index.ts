@@ -105,26 +105,52 @@ const REDIRECT_DOWNLOAD_PAGES = [
     /\/zlkdatasys\/mct\/(?:d\/[^#/?]+|proj_\d+\/download)\.shtml(?:[#?].*)?$/i,
 ];
 
-export const DOWNLOAD_CONTROL_SELECTOR = [
-    '[download]',
-    '[auto-inspect-button-type="download" i]',
-    '[data-action="download" i]',
-    '[data-command="download" i]',
-    '[data-purpose="download" i]',
-    '[data-type="download" i]',
-    '[data-download-url]',
-    '[data-download-href]',
-    '[data-download-link]',
-].join(', ');
-
-const DOWNLOAD_VALUE_ATTRIBUTES = [
+export const DOWNLOAD_CONTROL_VALUE_ATTRIBUTES = [
     'auto-inspect-button-type',
     'data-action',
     'data-command',
     'data-purpose',
     'data-type',
+] as const;
+
+export const DOWNLOAD_CONTROL_URL_ATTRIBUTES = [
+    'data-download-url',
+    'data-download-href',
+    'data-download-link',
+] as const;
+
+export const DOWNLOAD_CLICK_URL_ATTRIBUTES = [
+    'href',
+    'data-ng-href',
+    'data-href',
+    'data-gokey',
+    ...DOWNLOAD_CONTROL_URL_ATTRIBUTES,
+    'data-url',
+] as const;
+
+const DOWNLOAD_CONTROL_SELECTORS = [
+    '[download]',
+    ...DOWNLOAD_CONTROL_VALUE_ATTRIBUTES.map((name) => `[${name}="download" i]`),
+    ...DOWNLOAD_CONTROL_URL_ATTRIBUTES.map((name) => `[${name}]`),
 ];
-const DOWNLOAD_URL_ATTRIBUTES = ['data-download-url', 'data-download-href', 'data-download-link'];
+
+export const DOWNLOAD_CONTROL_SELECTOR = DOWNLOAD_CONTROL_SELECTORS.join(', ');
+
+export const DOWNLOAD_CLICK_TARGET_SELECTOR = [
+    'a',
+    'button',
+    '[role="button"]',
+    '[onclick]',
+    ...DOWNLOAD_CONTROL_SELECTORS,
+    ...DOWNLOAD_CLICK_URL_ATTRIBUTES.filter((name) => name !== 'href').map((name) => `[${name}]`),
+].join(', ');
+
+export const DOWNLOAD_TRIGGER_SELECTOR = [
+    DOWNLOAD_CONTROL_SELECTOR,
+    '[class*="download" i]',
+    '[id*="download" i]',
+    '[dt-eid*="download" i]',
+].join(', ');
 
 /**
  * Determines whether an element explicitly represents a download control.
@@ -134,14 +160,43 @@ export function isDownloadControl(element: Pick<Element, 'hasAttribute' | 'getAt
     if (!element) return false;
     if (element.hasAttribute('download')) return true;
 
-    if (DOWNLOAD_VALUE_ATTRIBUTES.some((name) => element.getAttribute(name)?.toLowerCase() === 'download')) return true;
-    if (DOWNLOAD_URL_ATTRIBUTES.some((name) => Boolean(element.getAttribute(name)))) return true;
+    if (DOWNLOAD_CONTROL_VALUE_ATTRIBUTES.some((name) => element.getAttribute(name)?.toLowerCase() === 'download'))
+        return true;
+    if (DOWNLOAD_CONTROL_URL_ATTRIBUTES.some((name) => Boolean(element.getAttribute(name)?.trim()))) return true;
 
     return false;
 }
 
+export function getDownloadUrlFromElement(
+    element: (Pick<Element, 'getAttribute'> & { readonly href?: string }) | null,
+) {
+    if (!element) return '';
+
+    for (const name of DOWNLOAD_CLICK_URL_ATTRIBUTES) {
+        const value = element.getAttribute(name);
+        if (!value?.trim()) continue;
+
+        if (name === 'data-gokey') {
+            const embeddedUrl = value.match(/download_url=([^&]+)/)?.[1];
+            if (embeddedUrl) return embeddedUrl;
+            continue;
+        }
+
+        return value;
+    }
+
+    return element.href || '';
+}
+
 function isHttpUrl(url: string) {
-    return /^https?:\/\//i.test(url);
+    if (!/^https?:\/\//i.test(url)) return false;
+
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch {
+        return false;
+    }
 }
 
 export function isDownloadCandidate(url: string, explicitControl = false) {
