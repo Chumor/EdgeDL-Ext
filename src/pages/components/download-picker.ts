@@ -36,7 +36,81 @@ const DOWNLOADER_OPTIONS: DownloaderOption[] = [
     { icon: downloaderIcons.EDGE, label: 'Edge', packageName: EDGE_DOWNLOADER_VALUE },
 ];
 
-function createPickerContent(shadow: ShadowRoot) {
+interface DownloadPickerOptions {
+    downloadUrl?: string;
+}
+
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
+type CopyButtonState = 'copy' | 'copied' | 'failed';
+
+function createCopyIcon(state: CopyButtonState) {
+    const icon = document.createElementNS(SVG_NAMESPACE, 'svg');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.setAttribute('stroke-width', '2');
+
+    if (state === 'copy') {
+        const back = document.createElementNS(SVG_NAMESPACE, 'rect');
+        back.setAttribute('width', '14');
+        back.setAttribute('height', '14');
+        back.setAttribute('x', '8');
+        back.setAttribute('y', '8');
+        back.setAttribute('rx', '2');
+
+        const front = document.createElementNS(SVG_NAMESPACE, 'path');
+        front.setAttribute('d', 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2');
+        icon.append(back, front);
+    } else {
+        const status = document.createElementNS(SVG_NAMESPACE, 'path');
+        status.setAttribute('d', state === 'copied' ? 'm5 12 4 4L19 6' : 'M18 6 6 18M6 6l12 12');
+        icon.appendChild(status);
+    }
+
+    return icon;
+}
+
+function setCopyButtonState(button: HTMLButtonElement, state: CopyButtonState) {
+    const labels: Record<CopyButtonState, string> = {
+        copy: '复制下载链接',
+        copied: '已复制下载链接',
+        failed: '复制失败',
+    };
+
+    button.classList.toggle('copied', state === 'copied');
+    button.classList.toggle('copy-failed', state === 'failed');
+    button.title = labels[state];
+    button.setAttribute('aria-label', labels[state]);
+    button.replaceChildren(createCopyIcon(state));
+}
+
+async function copyText(value: string) {
+    try {
+        await navigator.clipboard.writeText(value);
+        return;
+    } catch {
+        const textarea = document.createElement('textarea');
+        textarea.value = value;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.style.pointerEvents = 'none';
+        document.documentElement.appendChild(textarea);
+
+        try {
+            textarea.select();
+            if (!document.execCommand('copy')) throw new Error('Clipboard write failed');
+        } finally {
+            textarea.remove();
+        }
+    }
+}
+
+function createPickerContent(shadow: ShadowRoot, downloadUrl: string) {
     const background = document.createElement('div');
     background.className = 'edgedl-bg';
 
@@ -49,6 +123,15 @@ function createPickerContent(shadow: ShadowRoot) {
     const versionTag = document.createElement('div');
     versionTag.className = 'edgedl-version-tag';
     versionTag.textContent = `EdgeDL v${getEdgeDLVersion()}`;
+
+    const copyButton = document.createElement('button');
+    copyButton.className = 'edgedl-copy-button';
+    copyButton.type = 'button';
+    copyButton.disabled = !downloadUrl;
+    copyButton.title = downloadUrl ? '复制下载链接' : '没有可复制的下载链接';
+    copyButton.setAttribute('aria-label', copyButton.title);
+    copyButton.setAttribute('aria-live', 'polite');
+    copyButton.appendChild(createCopyIcon('copy'));
 
     const options = document.createElement('div');
     options.className = 'edgedl-options';
@@ -73,11 +156,14 @@ function createPickerContent(shadow: ShadowRoot) {
     checkbox.type = 'checkbox';
 
     label.append(checkbox, document.createTextNode('设为默认下载器'));
-    card.append(heading, versionTag, options, label);
+    card.append(heading, versionTag, copyButton, options, label);
     shadow.append(background, card);
 }
 
-export async function showDownloadPicker(callback: (result: DownloadPickerResult) => void) {
+export async function showDownloadPicker(
+    callback: (result: DownloadPickerResult) => void,
+    pickerOptions: DownloadPickerOptions = {},
+) {
     if (document.getElementById('edgedl-picker')) {
         callback({ type: 'cancel' });
         return;
@@ -87,8 +173,9 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
     picker.id = 'edgedl-picker';
     picker.classList.add('initializing');
 
+    const downloadUrl = pickerOptions.downloadUrl?.trim() || '';
     const shadow = picker.attachShadow({ mode: 'open' });
-    createPickerContent(shadow);
+    createPickerContent(shadow, downloadUrl);
 
     document.documentElement.appendChild(picker);
 
@@ -189,7 +276,7 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
         .edgedl-version-tag {
             position: absolute;
             top: 10px;
-            right: 12px;
+            left: 12px;
             font-size: 9px;
             transform: translate(0, 0);
             font-family: ui-monospace, SFMono-Regular, monospace;
@@ -201,6 +288,55 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
             letter-spacing: 0.3px;
             pointer-events: none;
             border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .edgedl-copy-button {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--edgedl-muted);
+            cursor: pointer;
+            transition: background 150ms ease, color 150ms ease;
+        }
+
+        .edgedl-copy-button:hover,
+        .edgedl-copy-button:focus-visible {
+            background: var(--edgedl-highlight);
+            color: var(--edgedl-text);
+            outline: none;
+        }
+
+        .edgedl-copy-button:focus-visible {
+            box-shadow: 0 0 0 2px var(--edgedl-selection-line);
+        }
+
+        .edgedl-copy-button:disabled {
+            cursor: default;
+        }
+
+        .edgedl-copy-button:disabled:not(.copied):not(.copy-failed) {
+            opacity: 0.38;
+        }
+
+        .edgedl-copy-button.copied {
+            color: #247a32;
+        }
+
+        .edgedl-copy-button.copy-failed {
+            color: #b42318;
+        }
+
+        .edgedl-copy-button svg {
+            width: 18px;
+            height: 18px;
         }
 
         .edgedl-options {
@@ -304,7 +440,31 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
     `;
     shadow.appendChild(style);
 
+    let copyFeedbackTimeoutId = 0;
+
     try {
+        const copyButton = shadow.querySelector('.edgedl-copy-button') as HTMLButtonElement | null;
+        if (!copyButton) throw new Error('Copy button is missing');
+
+        copyButton.addEventListener('click', () => {
+            if (!downloadUrl || copyButton.disabled) return;
+
+            copyButton.disabled = true;
+            void copyText(downloadUrl)
+                .then(() => setCopyButtonState(copyButton, 'copied'))
+                .catch((error: unknown) => {
+                    console.error('[EdgeDL] Failed to copy download URL', error);
+                    setCopyButtonState(copyButton, 'failed');
+                })
+                .finally(() => {
+                    window.clearTimeout(copyFeedbackTimeoutId);
+                    copyFeedbackTimeoutId = window.setTimeout(() => {
+                        setCopyButtonState(copyButton, 'copy');
+                        copyButton.disabled = false;
+                    }, 1500);
+                });
+        });
+
         // 读取默认下载器
         const defaultDownloader = await storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null);
         const defaultCheckbox = shadow.querySelector('#edgedl-set-default') as HTMLInputElement | null;
@@ -327,7 +487,7 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
         });
 
         // 点击唤起
-        shadow.querySelectorAll('button').forEach((btn) => {
+        shadow.querySelectorAll<HTMLButtonElement>('.edgedl-options button').forEach((btn) => {
             btn.addEventListener('click', async () => {
                 const pkg = btn.dataset.pkg || '';
 
@@ -357,6 +517,7 @@ export async function showDownloadPicker(callback: (result: DownloadPickerResult
     function cleanupPicker() {
         if (removed) return;
         removed = true;
+        window.clearTimeout(copyFeedbackTimeoutId);
         if (window.visualViewport) {
             window.visualViewport.removeEventListener('resize', layoutPicker);
             window.visualViewport.removeEventListener('scroll', layoutPicker);
