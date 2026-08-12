@@ -18,13 +18,12 @@
                 --card-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.78);
                 --success: #13a10e;
                 --success-soft: rgba(19, 161, 14, 0.12);
-                --success-line: rgba(19, 161, 14, 0.72);
                 --danger: #bc2f32;
                 --danger-soft: rgba(188, 47, 50, 0.12);
                 --switch-on: #2169eb;
                 --switch-off: #bdbdbd;
                 --switch-thumb: #ffffff;
-                --blue: #2169EB;
+                --blue: #2169eb;
                 --blue-soft: rgba(0, 120, 212, 0.1);
                 --radius-lg: 18px;
                 --radius-md: 12px;
@@ -38,9 +37,9 @@
             body {
                 margin: 0;
                 padding: 0;
-                width: 320px;
+                color-scheme: light;
+                width: 100%;
                 min-height: 150px;
-                max-height: 560px;
                 background: var(--bg);
                 color: var(--text);
                 font-family:
@@ -55,14 +54,6 @@
                 -webkit-font-smoothing: antialiased;
             }
 
-            @media (min-width: 340px) {
-                html,
-                body {
-                    width: 100%;
-                    max-height: none;
-                }
-            }
-
             button {
                 font: inherit;
                 color: inherit;
@@ -71,7 +62,7 @@
             }
 
             .app {
-                min-width: 320px;
+                width: 100%;
                 background: var(--surface);
                 overflow: hidden;
             }
@@ -115,6 +106,7 @@
             .version {
                 flex: 0 0 auto;
                 padding: 4px 7px;
+                border: 1px solid transparent;
                 border-radius: 999px;
                 background: var(--fill);
                 color: var(--muted);
@@ -130,7 +122,7 @@
                 align-items: center;
                 justify-content: space-between;
                 gap: 10px;
-                margin: 0 14px 8px;
+                margin: 20px 14px 6px;
                 padding: 9px 10px;
                 border-radius: 14px;
                 background: var(--card);
@@ -186,7 +178,7 @@
             .content {
                 display: grid;
                 gap: 13px;
-                padding: 6px 14px 14px;
+                padding: 0 14px 0;
             }
             .group {
                 display: grid;
@@ -198,7 +190,11 @@
                 align-items: center;
                 justify-content: space-between;
                 gap: 12px;
-                min-height: 28px;
+                min-height: 32px;
+            }
+
+            .group-head > div {
+                min-width: 0;
             }
 
             .group-title {
@@ -266,22 +262,54 @@
             }
 
             .downloader-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
+                display: flex;
+                max-height: 330px;
+                flex-direction: column;
                 gap: 8px;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior-y: contain;
+                padding: 1px 5px 1px 1px;
+                scroll-padding-block: 1px;
+                scroll-snap-type: y proximity;
+                scrollbar-color: var(--card-border) transparent;
+                scrollbar-width: thin;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .downloader-grid::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .downloader-grid::-webkit-scrollbar-thumb {
+                border-radius: 999px;
+                background: var(--card-border);
             }
 
             .downloader {
-                position: relative;
-                min-height: 72px;
-                padding: 8px 6px 7px;
+                display: flex;
+                flex: 0 0 48px;
+                align-items: center;
+                gap: 9px;
+                width: 100%;
+                min-height: 48px;
+                padding: 8px 11px;
+                border: 1px solid transparent;
                 border-radius: var(--radius-md);
                 background: var(--fill);
                 cursor: pointer;
+                scroll-snap-align: start;
+                touch-action: pan-y;
                 transition:
                     transform 140ms ease,
                     background 160ms ease,
-                    outline-color 160ms ease;
+                    border-color 160ms ease,
+                    color 160ms ease;
+            }
+
+            .downloader:focus-visible {
+                outline: 2px solid var(--blue);
+                outline-offset: 2px;
             }
 
             .downloader:active {
@@ -291,17 +319,17 @@
                 background: var(--fill-hover);
             }
             .downloader.selected {
-                background: var(--success-soft);
-                outline: 1.5px solid var(--success-line);
+                border-color: var(--blue);
+                background: var(--blue-soft);
             }
 
             .icon-box {
                 display: grid;
+                flex: 0 0 auto;
                 place-items: center;
-                width: 32px;
-                height: 32px;
-                margin: 0 auto 6px;
-                border-radius: 11px;
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
                 background: rgba(255, 255, 255, 0.58);
             }
 
@@ -310,38 +338,25 @@
             }
             .downloader img {
                 display: block;
-                width: 23px;
-                height: 23px;
+                width: 21px;
+                height: 21px;
             }
 
             .downloader .label {
                 display: block;
+                min-width: 0;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                text-align: center;
-                font-size: 11px;
-                line-height: 1.2;
+                text-align: left;
+                font-size: 12px;
+                line-height: 1.25;
                 font-weight: 550;
             }
 
-            .downloader .check {
-                position: absolute;
-                top: 6px;
-                right: 6px;
-                display: none;
-                width: 16px;
-                height: 16px;
-                place-items: center;
-                border-radius: 999px;
-                background: var(--success);
-                color: white;
-                font-size: 10px;
-                font-weight: 800;
-            }
-
-            .downloader.selected .check {
-                display: grid;
+            .downloader.selected .label {
+                color: var(--blue);
+                font-weight: 650;
             }
 
             .actions {
@@ -356,6 +371,7 @@
                 justify-content: center;
                 min-height: 36px;
                 padding: 0 10px;
+                border: 1px solid transparent;
                 border-radius: var(--radius-md);
                 background: var(--fill);
                 font-size: 12px;
@@ -386,8 +402,53 @@
                 cursor: not-allowed;
                 transform: none;
             }
-            .footer-actions {
-                padding-top: 1px;
+
+            .icon-button {
+                display: grid;
+                flex: 0 0 auto;
+                place-items: center;
+                width: 32px;
+                height: 32px;
+                padding: 0;
+                border: 1px solid transparent;
+                border-radius: 8px;
+                background: transparent;
+                color: var(--muted);
+                cursor: pointer;
+                transition:
+                    background 140ms ease,
+                    color 140ms ease,
+                    opacity 140ms ease;
+            }
+
+            .icon-button:hover {
+                background: var(--danger-soft);
+                color: var(--danger);
+            }
+
+            .icon-button:focus-visible {
+                outline: 2px solid var(--blue);
+                outline-offset: 2px;
+            }
+
+            .icon-button:active {
+                transform: scale(0.96);
+            }
+
+            .icon-button:disabled {
+                opacity: 0.32;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .icon-button:disabled:hover {
+                background: transparent;
+                color: var(--muted);
+            }
+
+            .icon-button svg {
+                width: 17px;
+                height: 17px;
             }
 
             .toast {
@@ -435,7 +496,6 @@
                     --card-highlight: none;
                     --success: #0eb244;
                     --success-soft: rgba(14, 178, 68, 0.16);
-                    --success-line: rgba(14, 178, 68, 0.82);
                     --danger: #e37d80;
                     --danger-soft: rgba(227, 125, 128, 0.14);
                     --switch-on: #4d8dfa;
@@ -443,6 +503,25 @@
                     --switch-thumb: #ffffff;
                     --blue: #8ecbff;
                     --blue-soft: rgba(142, 203, 255, 0.14);
+                    color-scheme: dark;
+                }
+
+                html,
+                body {
+                    color-scheme: dark;
+                }
+
+                .site-card,
+                .status-row,
+                .downloader,
+                .action,
+                .version {
+                    border-color: rgba(255, 255, 255, 0.08);
+                }
+
+                .downloader:hover,
+                .action:hover {
+                    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
                 }
 
                 .icon-box {
@@ -450,6 +529,11 @@
                 }
                 .downloader.selected .icon-box {
                     background: rgba(255, 255, 255, 0.1);
+                }
+
+                .toast {
+                    background: rgba(24, 24, 24, 0.96);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
                 }
             }
         </style>
@@ -502,14 +586,32 @@
                             <h2 class="group-title">默认下载器</h2>
                             <div id="default-desc" class="group-desc">下载时询问</div>
                         </div>
+                        <button
+                            id="clear-default"
+                            class="icon-button"
+                            type="button"
+                            title="清除默认下载器"
+                            aria-label="清除默认下载器"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                            </svg>
+                        </button>
                     </div>
                     <div id="downloader-grid" class="downloader-grid" aria-label="默认下载器"></div>
                 </section>
-
-                <div class="actions footer-actions">
-                    <button id="clear-default" class="action danger" type="button">清除默认</button>
-                    <button id="close-popup" class="action" type="button">完成</button>
-                </div>
             </div>
 
             <div id="toast" class="toast" role="status" aria-live="polite"></div>

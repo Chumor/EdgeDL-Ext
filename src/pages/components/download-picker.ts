@@ -138,7 +138,9 @@ function createPickerContent(shadow: ShadowRoot, downloadUrl: string) {
 
     for (const option of DOWNLOADER_OPTIONS) {
         const button = document.createElement('button');
+        button.type = 'button';
         button.dataset.pkg = option.packageName;
+        button.setAttribute('aria-pressed', 'false');
 
         const icon = document.createElement('img');
         icon.alt = '';
@@ -153,9 +155,13 @@ function createPickerContent(shadow: ShadowRoot, downloadUrl: string) {
 
     const checkbox = document.createElement('input');
     checkbox.id = 'edgedl-set-default';
+    checkbox.className = 'edgedl-default-checkbox';
     checkbox.type = 'checkbox';
 
-    label.append(checkbox, document.createTextNode('设为默认下载器'));
+    const labelText = document.createElement('span');
+    labelText.textContent = '设为默认下载器';
+
+    label.append(checkbox, labelText);
     card.append(heading, versionTag, copyButton, options, label);
     shadow.append(background, card);
 }
@@ -209,8 +215,9 @@ export async function showDownloadPicker(
             --edgedl-highlight: #FEFEFE;
             --edgedl-text: #242424;
             --edgedl-muted: #6f6f6f;
-            --edgedl-selection-bg: rgba(76, 175, 80, 0.12);
-            --edgedl-selection-line: rgba(76, 175, 80, 0.72);
+            --edgedl-control: #b7b7b7;
+            --edgedl-selection-line: rgba(0, 0, 0, 0.16);
+            --edgedl-selection-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             --edgedl-move-easing: cubic-bezier(0, 0, 0.2, 1);
             --edgedl-fade-easing: cubic-bezier(0.4, 0, 0.2, 1);
             --edgedl-exit-easing: cubic-bezier(0.4, 0, 1, 1);
@@ -370,16 +377,84 @@ export async function showDownloadPicker(
         }
 
         .edgedl-default-label {
-            margin-top: 12px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            width: 100%;
+            min-height: 38px;
+            margin-top: 12px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: var(--edgedl-highlight);
+            color: var(--edgedl-text);
             font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 150ms ease, box-shadow 150ms ease;
+        }
+
+        .edgedl-default-label:hover {
+            background: var(--edgedl-highlight);
+        }
+
+        .edgedl-default-label:focus-within {
+            box-shadow: 0 0 0 2px var(--edgedl-selection-line);
+        }
+
+        .edgedl-default-label > span {
+            display: block;
+            flex: 1;
+            min-width: 0;
+            line-height: 1.35;
+        }
+
+        .edgedl-default-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            display: grid;
+            flex: 0 0 auto;
+            place-content: center;
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            border: 1.5px solid var(--edgedl-control);
+            border-radius: 5px;
+            background: transparent;
+            cursor: pointer;
+            transition: background 150ms ease, border-color 150ms ease;
+        }
+
+        .edgedl-default-checkbox::after {
+            content: '';
+            width: 5px;
+            height: 9px;
+            border-right: 2px solid var(--edgedl-text);
+            border-bottom: 2px solid var(--edgedl-text);
+            opacity: 0;
+            transform: translateY(-1px) rotate(45deg) scale(0.7);
+            transition: opacity 150ms ease, transform 150ms ease;
+        }
+
+        .edgedl-default-checkbox:checked {
+            border-color: var(--edgedl-selection-line);
+            background: var(--edgedl-highlight);
+            box-shadow: var(--edgedl-selection-shadow);
+        }
+
+        .edgedl-default-checkbox:checked::after {
+            opacity: 1;
+            transform: translateY(-1px) rotate(45deg) scale(1);
+        }
+
+        .edgedl-default-checkbox:focus-visible {
+            outline: 2px solid var(--edgedl-selection-line);
+            outline-offset: 2px;
         }
 
         .edgedl-options button.selected {
-            background: var(--edgedl-selection-bg);
+            background: var(--edgedl-highlight);
             outline: 1.5px solid var(--edgedl-selection-line);
+            box-shadow: var(--edgedl-selection-shadow);
         }
 
         @media (prefers-color-scheme: dark) {
@@ -388,8 +463,9 @@ export async function showDownloadPicker(
                 --edgedl-highlight: #3A3A3A;
                 --edgedl-text: #FFFFFF;
                 --edgedl-muted: #d0d0d0;
-                --edgedl-selection-bg: rgba(129, 199, 132, 0.16);
-                --edgedl-selection-line: rgba(129, 199, 132, 0.82);
+                --edgedl-control: #8f8f8f;
+                --edgedl-selection-line: rgba(255, 255, 255, 0.24);
+                --edgedl-selection-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
             }
 
             .edgedl-card {
@@ -474,15 +550,22 @@ export async function showDownloadPicker(
 
         if (defaultDownloader) {
             // 高亮默认下载器按钮
-            const defaultBtn = shadow.querySelector(`button[data-pkg="${defaultDownloader}"]`) as HTMLButtonElement | null;
-            if (defaultBtn) defaultBtn.classList.add('selected');
+            const defaultBtn = shadow.querySelector(
+                `button[data-pkg="${defaultDownloader}"]`,
+            ) as HTMLButtonElement | null;
+            if (defaultBtn) {
+                defaultBtn.classList.add('selected');
+                defaultBtn.setAttribute('aria-pressed', 'true');
+            }
         }
 
         // 取消勾选时清除默认下载器
         defaultCheckbox.addEventListener('change', async () => {
             if (!defaultCheckbox.checked) {
                 await storage.remove(DEFAULT_DOWNLOADER_KEY);
-                shadow.querySelector('button.selected')?.classList.remove('selected');
+                const selectedButton = shadow.querySelector<HTMLButtonElement>('button.selected');
+                selectedButton?.classList.remove('selected');
+                selectedButton?.setAttribute('aria-pressed', 'false');
             }
         });
 
@@ -490,6 +573,10 @@ export async function showDownloadPicker(
         shadow.querySelectorAll<HTMLButtonElement>('.edgedl-options button').forEach((btn) => {
             btn.addEventListener('click', async () => {
                 const pkg = btn.dataset.pkg || '';
+                shadow.querySelector<HTMLButtonElement>('button.selected')?.setAttribute('aria-pressed', 'false');
+                shadow.querySelector<HTMLButtonElement>('button.selected')?.classList.remove('selected');
+                btn.classList.add('selected');
+                btn.setAttribute('aria-pressed', 'true');
 
                 // 按当前选择更新默认下载器
                 if (defaultCheckbox.checked) {
