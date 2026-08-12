@@ -14,6 +14,7 @@ export function isDownloadRequestMessage(value: unknown): value is DownloadReque
     return (
         message.source === EDGEDL_MESSAGE_SOURCE &&
         message.type === 'download-request' &&
-        typeof message.url === 'string'
+        typeof message.url === 'string' &&
+        (message.explicitControl === undefined || typeof message.explicitControl === 'boolean')
     );
 }

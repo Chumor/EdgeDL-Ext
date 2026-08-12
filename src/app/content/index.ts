@@ -1,6 +1,14 @@
 import { showDownloadPicker } from '@/pages/components/download-picker';
 import { showToast } from '@/pages/components/toast';
-import { DOWNLOAD_CONTROL_SELECTOR, isDownloadCandidate, isDownloadControl, isDownloadLink } from '@/pkg/core/detector';
+import {
+    DOWNLOAD_CLICK_TARGET_SELECTOR,
+    DOWNLOAD_CONTROL_SELECTOR,
+    DOWNLOAD_TRIGGER_SELECTOR,
+    getDownloadUrlFromElement,
+    isDownloadCandidate,
+    isDownloadControl,
+    isDownloadLink,
+} from '@/pkg/core/detector';
 import { requestDownload } from '@/pkg/core/download';
 import {
     getControlledHostname,
@@ -33,27 +41,11 @@ interface DownloadClickCandidate {
 
 function getDownloadUrlFromClick(target: HTMLElement): DownloadClickCandidate {
     const control = target.closest(DOWNLOAD_CONTROL_SELECTOR);
-    const downloadTrigger =
-        target.closest('[class*="download" i], [id*="download" i], [dt-eid*="download" i]') || control;
-    const link = target.closest(
-        'a, button, [role="button"], [onclick], [data-ng-href], [data-href], [data-url], [data-gokey], [data-download-url], [data-download-href], [data-download-link]',
-    ) as HTMLElement | null;
+    const downloadTrigger = target.closest(DOWNLOAD_TRIGGER_SELECTOR);
+    const link = target.closest(DOWNLOAD_CLICK_TARGET_SELECTOR) as HTMLElement | null;
     const explicit = isDownloadControl(control);
 
-    let url = '';
-    if (link) {
-        url =
-            link.getAttribute('href') ||
-            link.getAttribute('data-ng-href') ||
-            link.getAttribute('data-href') ||
-            link.getAttribute('data-gokey')?.match(/download_url=([^&]+)/)?.[1] ||
-            link.getAttribute('data-download-url') ||
-            link.getAttribute('data-download-href') ||
-            link.getAttribute('data-download-link') ||
-            link.getAttribute('data-url') ||
-            (link as HTMLAnchorElement).href ||
-            '';
-    }
+    let url = getDownloadUrlFromElement(link);
 
     if (isInvalidNavigationUrl(url)) {
         const onclick = link
