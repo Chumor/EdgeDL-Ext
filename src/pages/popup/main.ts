@@ -223,6 +223,35 @@ function renderSiteControls() {
     siteDesc.textContent = enabled ? '处理本站下载跳转' : '本站已暂停';
 }
 
+function getViewportBottom() {
+    const viewport = window.visualViewport;
+    return viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+}
+
+function layoutDownloaderGrid() {
+    const grid = qs<HTMLElement>('#downloader-grid');
+    const content = grid.closest<HTMLElement>('.content');
+    if (!content) return;
+
+    const bottomGap = Number.parseFloat(window.getComputedStyle(content).paddingBottom) || 0;
+    const availableHeight = Math.max(0, getViewportBottom() - grid.getBoundingClientRect().top - bottomGap);
+
+    grid.style.maxHeight = `${Math.min(availableHeight, grid.scrollHeight)}px`;
+}
+
+function scrollSelectedDownloaderIntoView() {
+    const grid = qs<HTMLElement>('#downloader-grid');
+    const selected = grid.querySelector<HTMLButtonElement>('.downloader.selected');
+    if (!selected) return;
+
+    const gridRect = grid.getBoundingClientRect();
+    const selectedRect = selected.getBoundingClientRect();
+    const itemTop = selectedRect.top - gridRect.top + grid.scrollTop;
+    const itemBottom = itemTop + selectedRect.height;
+    if (itemTop < grid.scrollTop) grid.scrollTop = itemTop;
+    else if (itemBottom > grid.scrollTop + grid.clientHeight) grid.scrollTop = itemBottom - grid.clientHeight;
+}
+
 function renderDownloaderGrid() {
     const grid = qs<HTMLElement>('#downloader-grid');
     const selected = getSelectedDownloaderValue();
@@ -235,10 +264,7 @@ function renderDownloaderGrid() {
             button.dataset.pkg = item.value;
             button.title = item.description;
             button.classList.toggle('selected', selected === item.value);
-
-            const check = document.createElement('span');
-            check.className = 'check';
-            check.textContent = '✓';
+            button.setAttribute('aria-pressed', String(selected === item.value));
 
             const iconBox = document.createElement('span');
             iconBox.className = 'icon-box';
@@ -252,10 +278,13 @@ function renderDownloaderGrid() {
             label.className = 'label';
             label.textContent = item.label;
 
-            button.append(check, iconBox, label);
+            button.append(iconBox, label);
             return button;
         }),
     );
+
+    layoutDownloaderGrid();
+    scrollSelectedDownloaderIntoView();
 }
 
 function renderDefaultDesc() {
@@ -266,6 +295,8 @@ function renderDefaultDesc() {
     desc.textContent = state.defaultDownloader ? `默认：${label}` : '下载时询问';
 
     clearButton.disabled = !state.defaultDownloader;
+    clearButton.title = state.defaultDownloader ? '清除默认下载器' : '未设置默认下载器';
+    clearButton.setAttribute('aria-label', clearButton.title);
 }
 
 function render() {
@@ -339,7 +370,6 @@ function bindEvents() {
     const openPickerButton = qs<HTMLButtonElement>('#open-picker');
     const refreshButton = qs<HTMLButtonElement>('#reload-state');
     const clearButton = qs<HTMLButtonElement>('#clear-default');
-    const closeButton = qs<HTMLButtonElement>('#close-popup');
 
     grid.addEventListener('click', (event) => {
         const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('button[data-pkg]');
@@ -395,6 +425,13 @@ function bindEvents() {
         );
     });
 
+    const handleViewportChange = () => {
+        layoutDownloaderGrid();
+        scrollSelectedDownloaderIntoView();
+    };
+    window.addEventListener('resize', handleViewportChange);
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+
     clearButton.addEventListener('click', () => {
         void runPopupAction(
             async () => {
@@ -408,10 +445,8 @@ function bindEvents() {
                 failureMessage: '默认下载器清除失败',
                 logMessage: '[EdgeDL] Failed to clear default downloader',
             },
-        );
+        ).finally(renderDefaultDesc);
     });
-
-    closeButton.addEventListener('click', () => window.close());
 }
 
 async function init() {
