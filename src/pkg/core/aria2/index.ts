@@ -1,3 +1,4 @@
+import { getMessage } from '../../browser/i18n.ts';
 import { getErrorMessage } from '../../utils/error.ts';
 
 export const ARIA2_CONFIG_KEY = 'edgedl-aria2-config';
@@ -43,7 +44,7 @@ function createRpcId() {
 }
 
 function createTimeoutError(cause: unknown) {
-    return new Error('连接 aria2 超时', { cause });
+    return new Error(getMessage('aria2ConnectionTimedOut', undefined, 'Connection to aria2 timed out'), { cause });
 }
 
 export function normalizeAria2Config(value: unknown): Aria2Config {
@@ -67,11 +68,17 @@ export function normalizeAria2Endpoint(endpoint: string) {
     if (protocolMatch) {
         const protocol = `${protocolMatch[1].toLowerCase()}:`;
         if (!['http:', 'https:'].includes(protocol)) {
-            throw new Error('RPC 地址仅支持 HTTP 或 HTTPS');
+            throw new Error(
+                getMessage('rpcEndpointProtocolsOnly', undefined, 'The RPC endpoint must use HTTP or HTTPS'),
+            );
         }
 
         const authority = value.slice(protocolMatch[0].length).split(/[/?#]/, 1)[0];
-        if (!authority || authority === '@') throw new Error('RPC 地址缺少主机名 (missing hostname)');
+        if (!authority || authority === '@') {
+            throw new Error(
+                getMessage('rpcEndpointMissingHostname', undefined, 'The RPC endpoint is missing a hostname'),
+            );
+        }
     }
 
     let parsed: URL;
@@ -79,16 +86,24 @@ export function normalizeAria2Endpoint(endpoint: string) {
     try {
         parsed = new URL(value);
     } catch {
-        throw new Error('RPC 地址格式无效');
+        throw new Error(getMessage('rpcEndpointInvalid', undefined, 'The RPC endpoint is not a valid URL'));
     }
 
     if (!['http:', 'https:'].includes(parsed.protocol)) {
-        throw new Error('RPC 地址仅支持 HTTP 或 HTTPS');
+        throw new Error(getMessage('rpcEndpointProtocolsOnly', undefined, 'The RPC endpoint must use HTTP or HTTPS'));
     }
 
-    if (!parsed.hostname) throw new Error('RPC 地址缺少主机名 (missing hostname)');
+    if (!parsed.hostname) {
+        throw new Error(getMessage('rpcEndpointMissingHostname', undefined, 'The RPC endpoint is missing a hostname'));
+    }
     if (parsed.username || parsed.password) {
-        throw new Error('RPC 地址包含嵌入凭据 (embedded credentials)，请使用 RPC 密钥');
+        throw new Error(
+            getMessage(
+                'rpcEndpointEmbeddedCredentials',
+                undefined,
+                'The RPC endpoint contains credentials; use the RPC secret field instead',
+            ),
+        );
     }
 
     parsed.hash = '';
@@ -104,7 +119,7 @@ function readRpcError(value: unknown) {
     if (!isRecord(value) || typeof value.code !== 'number' || !Number.isFinite(value.code)) return null;
     if (typeof value.message !== 'string') return null;
 
-    return `aria2 RPC 错误 (${value.code})：${value.message}`;
+    return getMessage('aria2RpcError', [String(value.code), value.message], 'aria2 RPC error ($1): $2');
 }
 
 export async function callAria2<T>(
@@ -137,32 +152,59 @@ export async function callAria2<T>(
             });
         } catch (error: unknown) {
             if (controller.signal.aborted) throw createTimeoutError(error);
-            throw new Error(`无法连接 aria2：${getErrorMessage(error)}`, { cause: error });
+            throw new Error(
+                getMessage('aria2UnableToConnect', getErrorMessage(error), 'Could not connect to aria2: $1'),
+                { cause: error },
+            );
         }
 
-        if (!response.ok) throw new Error(`aria2 RPC 返回 HTTP ${response.status}`);
+        if (!response.ok) {
+            throw new Error(getMessage('aria2HttpError', String(response.status), 'aria2 RPC returned HTTP $1'));
+        }
 
         let payload: unknown;
         try {
             payload = await response.json();
         } catch (error: unknown) {
             if (controller.signal.aborted) throw createTimeoutError(error);
-            throw new Error('aria2 RPC 返回了无效的 JSON', { cause: error });
+            throw new Error(getMessage('aria2InvalidJson', undefined, 'aria2 RPC returned invalid JSON'), {
+                cause: error,
+            });
         }
 
         if (!isRecord(payload) || payload.jsonrpc !== '2.0' || payload.id !== requestId) {
-            throw new Error('aria2 RPC 响应的 jsonrpc 或 id 无效');
+            throw new Error(
+                getMessage(
+                    'aria2InvalidResponseIdentity',
+                    undefined,
+                    'The aria2 RPC response has an invalid jsonrpc version or ID',
+                ),
+            );
         }
 
         const hasResult = Object.hasOwn(payload, 'result');
         const hasError = Object.hasOwn(payload, 'error');
         if (hasResult === hasError) {
-            throw new Error('aria2 RPC 响应必须包含 result 或 error 之一');
+            throw new Error(
+                getMessage(
+                    'aria2MissingResultOrError',
+                    undefined,
+                    'The aria2 RPC response must contain either result or error',
+                ),
+            );
         }
 
         if (hasError) {
             const rpcError = readRpcError(payload.error);
-            if (!rpcError) throw new Error('aria2 RPC 错误对象格式无效');
+            if (!rpcError) {
+                throw new Error(
+                    getMessage(
+                        'aria2InvalidErrorObject',
+                        undefined,
+                        'The aria2 RPC response contains an invalid error object',
+                    ),
+                );
+            }
             throw new Error(rpcError);
         }
 
@@ -175,7 +217,7 @@ export async function callAria2<T>(
 export async function getAria2Version(config: Aria2Config, options?: Aria2CallOptions) {
     const result = await callAria2<unknown>(config, 'aria2.getVersion', [], options);
     if (!isRecord(result) || typeof result.version !== 'string') {
-        throw new Error('aria2 RPC 返回的版本信息无效');
+        throw new Error(getMessage('aria2InvalidVersion', undefined, 'aria2 RPC returned invalid version information'));
     }
 
     return result as unknown as Aria2Version;
@@ -188,7 +230,11 @@ export async function addAria2Uri(
     callOptions?: Aria2CallOptions,
 ) {
     const url = new URL(downloadUrl);
-    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('aria2 仅支持 HTTP 或 HTTPS 下载地址');
+    if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error(
+            getMessage('aria2DownloadProtocolsOnly', undefined, 'aria2 supports only HTTP or HTTPS download URLs'),
+        );
+    }
 
     const aria2Options: Record<string, string> = {};
     const directory = addOptions.directory?.trim() || config.directory.trim();
@@ -209,7 +255,9 @@ export async function addAria2Uri(
     }
 
     const gid = await callAria2<unknown>(config, 'aria2.addUri', [[url.toString()], aria2Options], callOptions);
-    if (typeof gid !== 'string' || !gid) throw new Error('aria2 RPC 返回的任务 GID 无效');
+    if (typeof gid !== 'string' || !gid) {
+        throw new Error(getMessage('aria2InvalidGid', undefined, 'aria2 RPC returned an invalid task GID'));
+    }
 
     return gid;
 }

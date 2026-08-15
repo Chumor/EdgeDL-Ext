@@ -1,5 +1,6 @@
 import { downloaderIcons } from '@/pages/components/assets/icons';
 import { queryActiveTab, sendMessageToTab, sendRuntimeMessage, storage } from '@/pkg/browser/api';
+import { getMessage, localizeDocument } from '@/pkg/browser/i18n';
 import { EDGEDL_MESSAGE_SOURCE, type Aria2RuntimeResponse } from '@/pkg/browser/messages';
 import {
     ARIA2_CONFIG_KEY,
@@ -51,13 +52,13 @@ const downloaderOptions = [
         label: 'Aria2 RPC',
         value: ARIA2_DOWNLOADER_VALUE,
         icon: downloaderIcons.ARIA2,
-        description: '通过 RPC 添加到 aria2',
+        description: getMessage('aria2DownloaderDescription'),
     },
     {
         label: 'Edge',
         value: EDGE_DOWNLOADER_VALUE,
         icon: downloaderIcons.EDGE,
-        description: '使用 Edge 内置下载器',
+        description: getMessage('edgeDownloaderDescription'),
     },
 ] as const;
 
@@ -102,8 +103,8 @@ function getHostname(url: string) {
 }
 
 function getDownloaderLabel(value: string | null) {
-    if (!value) return '询问';
-    return downloaderOptions.find((item) => item.value === value)?.label || '自定义';
+    if (!value) return getMessage('ask');
+    return downloaderOptions.find((item) => item.value === value)?.label || getMessage('customDownloader');
 }
 
 function getSelectedDownloaderValue() {
@@ -152,7 +153,7 @@ function showToast(message: string) {
 }
 
 function getDefaultDownloaderToast(value: string | null) {
-    return `已将默认下载器设为 ${getDownloaderLabel(value)}`;
+    return getMessage('defaultDownloaderSet', getDownloaderLabel(value));
 }
 
 async function setDefaultDownloader(pkg: DownloaderValue | string) {
@@ -209,7 +210,7 @@ function renderHeader() {
 
     icon.src = downloaderIcons.EDGE;
     version.textContent = `v${getEdgeDLVersion()}`;
-    host.textContent = site?.host || '当前页面不可用';
+    host.textContent = site?.host || getMessage('currentPageUnavailable');
     host.title = site?.host || '';
 
     const enabled = !!site?.host && !site.blocked && !isEdgeDefaultDownloader();
@@ -220,7 +221,11 @@ function renderHeader() {
     dot.className = 'dot';
 
     const label = document.createElement('span');
-    label.textContent = !site?.host ? '不可用' : enabled ? '已接管' : '已暂停';
+    label.textContent = !site?.host
+        ? getMessage('unavailable')
+        : enabled
+          ? getMessage('takeoverActive')
+          : getMessage('takeoverPaused');
 
     pill.append(dot, label);
 }
@@ -236,16 +241,16 @@ function renderSiteControls() {
     switchButton.setAttribute('aria-pressed', String(enabled));
 
     if (!site?.host) {
-        siteDesc.textContent = '当前页面不可用';
+        siteDesc.textContent = getMessage('currentPageUnavailable');
         return;
     }
 
     if (isEdgeDefaultDownloader()) {
-        siteDesc.textContent = '默认使用 Edge，不接管下载';
+        siteDesc.textContent = getMessage('edgeDefaultDisablesTakeover');
         return;
     }
 
-    siteDesc.textContent = enabled ? '处理本站下载跳转' : '本站已暂停';
+    siteDesc.textContent = enabled ? getMessage('siteTakeoverDescription') : getMessage('sitePausedToast');
 }
 
 function setAria2Status(message: string, type: 'error' | 'idle' | 'success' = 'idle') {
@@ -263,8 +268,9 @@ function renderAria2Settings() {
     switchButton.classList.toggle('on', expanded);
     switchButton.setAttribute('aria-pressed', String(expanded));
     switchButton.setAttribute('aria-expanded', String(expanded));
-    switchButton.setAttribute('aria-label', expanded ? '收起 Aria2 RPC 设置' : '展开 Aria2 RPC 设置');
-    switchButton.title = expanded ? '收起 Aria2 RPC 设置' : '展开 Aria2 RPC 设置';
+    const toggleLabel = getMessage(expanded ? 'collapseAria2Settings' : 'expandAria2Settings');
+    switchButton.setAttribute('aria-label', toggleLabel);
+    switchButton.title = toggleLabel;
     form.hidden = !expanded;
 
     qs<HTMLInputElement>('#aria2-endpoint').value = state.aria2Config.endpoint;
@@ -285,7 +291,7 @@ async function saveAria2Config() {
     await storage.set(ARIA2_CONFIG_KEY, config);
     state.aria2Config = config;
     qs<HTMLInputElement>('#aria2-endpoint').value = config.endpoint;
-    setAria2Status('配置已保存', 'success');
+    setAria2Status(getMessage('configurationSaved'), 'success');
     return config;
 }
 
@@ -299,7 +305,7 @@ async function testAria2Connection() {
         return;
     }
 
-    setAria2Status('连接中…');
+    setAria2Status(getMessage('connecting'));
 
     try {
         const response = await sendRuntimeMessage<Aria2RuntimeResponse>({
@@ -308,10 +314,10 @@ async function testAria2Connection() {
         });
 
         if (!response.ok) throw new Error(response.error);
-        if (!response.version) throw new Error('aria2 未返回版本');
+        if (!response.version) throw new Error(getMessage('aria2NoVersion'));
 
-        setAria2Status(`已连接 · aria2 ${response.version}`, 'success');
-        showToast('Aria2 已连接');
+        setAria2Status(getMessage('aria2ConnectedStatus', response.version), 'success');
+        showToast(getMessage('aria2ConnectedToast'));
     } catch (error: unknown) {
         setAria2Status(getErrorMessage(error), 'error');
         throw error;
@@ -355,10 +361,14 @@ function renderDefaultDesc() {
     const clearButton = qs<HTMLButtonElement>('#clear-default');
     const label = getDownloaderLabel(state.defaultDownloader);
 
-    desc.textContent = state.defaultDownloader ? `默认：${label}` : '下载时询问';
+    desc.textContent = state.defaultDownloader
+        ? getMessage('defaultDownloaderSummary', label)
+        : getMessage('askEveryTime');
 
     clearButton.disabled = !state.defaultDownloader;
-    clearButton.title = state.defaultDownloader ? '清除默认下载器' : '未设置默认下载器';
+    clearButton.title = state.defaultDownloader
+        ? getMessage('clearDefaultDownloader')
+        : getMessage('noDefaultDownloader');
     clearButton.setAttribute('aria-label', clearButton.title);
 }
 
@@ -411,7 +421,7 @@ async function toggleCurrentSite() {
 async function openPagePicker() {
     const tabId = state.activeTab?.id;
     if (!tabId) {
-        showToast('当前页面不可用');
+        showToast(getMessage('currentPageUnavailable'));
         return;
     }
 
@@ -451,7 +461,7 @@ function bindEvents() {
             },
             {
                 busyElement: button,
-                failureMessage: '保存默认下载器失败',
+                failureMessage: getMessage('saveDefaultDownloaderFailed'),
                 logMessage: '[EdgeDL] Failed to update default downloader',
             },
         );
@@ -467,7 +477,7 @@ function bindEvents() {
             },
             {
                 busyElement: aria2SettingsSwitch,
-                failureMessage: '切换 Aria2 设置失败',
+                failureMessage: getMessage('toggleAria2SettingsFailed'),
                 logMessage: '[EdgeDL] Failed to toggle aria2 RPC settings',
             },
         );
@@ -479,7 +489,7 @@ function bindEvents() {
             async () => {
                 try {
                     await saveAria2Config();
-                    showToast('Aria2 配置已保存');
+                    showToast(getMessage('aria2ConfigurationSaved'));
                 } catch (error: unknown) {
                     setAria2Status(getErrorMessage(error), 'error');
                     throw error;
@@ -487,7 +497,7 @@ function bindEvents() {
             },
             {
                 busyElement: aria2SaveButton,
-                failureMessage: '保存 Aria2 配置失败',
+                failureMessage: getMessage('saveAria2ConfigurationFailed'),
                 logMessage: '[EdgeDL] Failed to save aria2 RPC configuration',
             },
         );
@@ -496,7 +506,7 @@ function bindEvents() {
     aria2TestButton.addEventListener('click', () => {
         void runPopupAction(testAria2Connection, {
             busyElement: aria2TestButton,
-            failureMessage: 'Aria2 连接失败',
+            failureMessage: getMessage('aria2ConnectionFailed'),
             logMessage: '[EdgeDL] Failed to test aria2 RPC connection',
         });
     });
@@ -506,11 +516,11 @@ function bindEvents() {
             async () => {
                 await toggleCurrentSite();
                 render();
-                showToast(state.siteState?.blocked ? '本站已暂停' : '本站已接管');
+                showToast(getMessage(state.siteState?.blocked ? 'sitePausedToast' : 'siteTakeoverToast'));
             },
             {
                 busyElement: switchButton,
-                failureMessage: '切换站点状态失败',
+                failureMessage: getMessage('toggleSiteFailed'),
                 logMessage: '[EdgeDL] Failed to toggle site state',
             },
         );
@@ -518,7 +528,7 @@ function bindEvents() {
 
     openPickerButton.addEventListener('click', () => {
         void runPopupAction(openPagePicker, {
-            failureMessage: '无法打开选择器',
+            failureMessage: getMessage('openPickerFailed'),
             logMessage: '[EdgeDL] Failed to open page picker',
         });
     });
@@ -527,11 +537,11 @@ function bindEvents() {
         void runPopupAction(
             async () => {
                 await refreshState();
-                showToast('状态已刷新');
+                showToast(getMessage('statusRefreshed'));
             },
             {
                 busyElement: refreshButton,
-                failureMessage: '刷新失败',
+                failureMessage: getMessage('refreshFailed'),
                 logMessage: '[EdgeDL] Failed to refresh state',
             },
         );
@@ -543,11 +553,11 @@ function bindEvents() {
                 await storage.remove(DEFAULT_DOWNLOADER_KEY);
                 state.defaultDownloader = null;
                 render();
-                showToast('已清除默认');
+                showToast(getMessage('defaultCleared'));
             },
             {
                 busyElement: clearButton,
-                failureMessage: '默认下载器清除失败',
+                failureMessage: getMessage('clearDefaultFailed'),
                 logMessage: '[EdgeDL] Failed to clear default downloader',
             },
         ).finally(renderDefaultDesc);
@@ -555,6 +565,7 @@ function bindEvents() {
 }
 
 async function init() {
+    localizeDocument();
     bindEvents();
     await loadState();
     render();
@@ -562,5 +573,5 @@ async function init() {
 
 void init().catch((error: unknown) => {
     console.error('[EdgeDL] Failed to initialize popup', error);
-    showToast('菜单初始化失败');
+    showToast(getMessage('popupInitializationFailed'));
 });

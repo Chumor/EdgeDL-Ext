@@ -37,11 +37,11 @@ test('normalizes aria2 configuration and validates RPC endpoints', () => {
     assert.equal(normalizeAria2Endpoint('http://127.0.0.1:6800/jsonrpc'), 'http://127.0.0.1:6800/jsonrpc');
     assert.equal(normalizeAria2Endpoint(''), DEFAULT_ARIA2_CONFIG.endpoint);
     assert.equal(normalizeAria2Endpoint('   '), DEFAULT_ARIA2_CONFIG.endpoint);
-    assert.throws(() => normalizeAria2Endpoint('ws://127.0.0.1:6800/jsonrpc'), /HTTP 或 HTTPS/);
-    assert.throws(() => normalizeAria2Endpoint('not a URL'), /格式无效/);
-    assert.throws(() => normalizeAria2Endpoint('http://@/jsonrpc'), /missing hostname/i);
-    assert.throws(() => normalizeAria2Endpoint('http:///jsonrpc'), /missing hostname/i);
-    assert.throws(() => normalizeAria2Endpoint('http://user:pass@127.0.0.1:6800/jsonrpc'), /embedded credentials/i);
+    assert.throws(() => normalizeAria2Endpoint('ws://127.0.0.1:6800/jsonrpc'), /HTTP or HTTPS/);
+    assert.throws(() => normalizeAria2Endpoint('not a URL'), /not a valid URL/);
+    assert.throws(() => normalizeAria2Endpoint('http://@/jsonrpc'), /missing (?:a )?hostname/i);
+    assert.throws(() => normalizeAria2Endpoint('http:///jsonrpc'), /missing (?:a )?hostname/i);
+    assert.throws(() => normalizeAria2Endpoint('http://user:pass@127.0.0.1:6800/jsonrpc'), /credentials/i);
 });
 
 test('adds a URI with token, directory, and referer options', async () => {
@@ -90,7 +90,7 @@ test('rejects non-HTTP(S) download URLs before making an RPC call', async () => 
 
     await assert.rejects(
         () => addAria2Uri(DEFAULT_ARIA2_CONFIG, 'ftp://example.com/file.zip', {}, { fetchImpl }),
-        /aria2 仅支持 HTTP 或 HTTPS 下载地址/,
+        /aria2 supports only HTTP or HTTPS download URLs/,
     );
     assert.equal(called, false);
 });
@@ -151,10 +151,13 @@ test('rejects malformed aria2 results', async () => {
         return createJsonResponse({ id: body.id, jsonrpc: '2.0', result: null });
     };
 
-    await assert.rejects(() => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: missingVersion }), /版本信息无效/);
+    await assert.rejects(
+        () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: missingVersion }),
+        /invalid version information/,
+    );
     await assert.rejects(
         () => addAria2Uri(DEFAULT_ARIA2_CONFIG, 'https://example.com/file.zip', {}, { fetchImpl: missingGid }),
-        /任务 GID 无效/,
+        /invalid task GID/,
     );
 });
 
@@ -181,17 +184,20 @@ test('rejects responses with an invalid JSON-RPC envelope', async () => {
 
     await assert.rejects(
         () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: invalidJsonRpc }),
-        /jsonrpc 或 id 无效/,
+        /invalid jsonrpc version or ID/,
     );
     await assert.rejects(
         () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: mismatchedId }),
-        /jsonrpc 或 id 无效/,
+        /invalid jsonrpc version or ID/,
     );
     await assert.rejects(
         () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: bothResultAndError }),
-        /必须包含 result 或 error 之一/,
+        /contain either result or error/,
     );
-    await assert.rejects(() => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: invalidError }), /错误对象格式无效/);
+    await assert.rejects(
+        () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: invalidError }),
+        /invalid error object/,
+    );
 });
 
 test('surfaces network-level failures', async () => {
@@ -201,7 +207,7 @@ test('surfaces network-level failures', async () => {
 
     await assert.rejects(
         () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: networkFailure }),
-        /无法连接 aria2：.*socket hang up/,
+        /Could not connect to aria2:.*socket hang up/,
     );
 });
 
@@ -219,7 +225,7 @@ test('surfaces invalid JSON bodies', async () => {
 
     await assert.rejects(
         () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: invalidJsonBody }),
-        /aria2 RPC 返回了无效的 JSON/,
+        /aria2 RPC returned invalid JSON/,
     );
 });
 
@@ -232,7 +238,7 @@ test('surfaces JSON-RPC and HTTP failures', async () => {
 
     await assert.rejects(
         () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: rpcFailure }),
-        /aria2 RPC 错误 \(1\)：Unauthorized/,
+        /aria2 RPC error \(1\): Unauthorized/,
     );
     await assert.rejects(() => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl: httpFailure }), /HTTP 503/);
 });
@@ -249,5 +255,8 @@ test('times out while the RPC response body is still pending', async () => {
                 }),
         }) as Response;
 
-    await assert.rejects(() => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl, timeoutMs: 20 }), /连接 aria2 超时/);
+    await assert.rejects(
+        () => getAria2Version(DEFAULT_ARIA2_CONFIG, { fetchImpl, timeoutMs: 20 }),
+        /Connection to aria2 timed out/,
+    );
 });

@@ -4,6 +4,7 @@
  */
 import { showToast } from '@/pages/components/toast';
 import { sendRuntimeMessage } from '@/pkg/browser/api';
+import { getMessage } from '@/pkg/browser/i18n';
 import { EDGEDL_MESSAGE_SOURCE, type Aria2RuntimeResponse } from '@/pkg/browser/messages';
 import { ARIA2_DOWNLOADER_VALUE } from '@/pkg/core/aria2';
 import { openDownloader } from '@/pkg/core/launcher';
@@ -21,7 +22,7 @@ export type OpenDownloadResult = 'failed' | 'opened' | 'unsupported';
  */
 export async function openDownload(url: string, downloader: string, referer?: string): Promise<OpenDownloadResult> {
     if (downloader === ARIA2_DOWNLOADER_VALUE) {
-        showToast('正在发送到 Aria2', { duration: 1800 });
+        showToast(getMessage('sendingToAria2'), { duration: 1800 });
 
         let response: Aria2RuntimeResponse;
         try {
@@ -33,7 +34,7 @@ export async function openDownload(url: string, downloader: string, referer?: st
             });
         } catch (error: unknown) {
             const message = getErrorMessage(error);
-            showToast(`Aria2 请求失败：${message}`, { duration: 3200, type: 'error' });
+            showToast(getMessage('aria2RequestFailed', message), { duration: 3200, type: 'error' });
             return 'failed';
         }
 
@@ -42,7 +43,7 @@ export async function openDownload(url: string, downloader: string, referer?: st
             return 'failed';
         }
 
-        showToast('已添加到 Aria2', { duration: 1800 });
+        showToast(getMessage('addedToAria2'), { duration: 1800 });
         return 'opened';
     }
 
@@ -50,11 +51,11 @@ export async function openDownload(url: string, downloader: string, referer?: st
         (key) => DOWNLOADERS[key] === downloader,
     );
     if (!launcherKey) {
-        showToast('无法打开下载器');
+        showToast(getMessage('openDownloaderFailed'));
         return 'unsupported';
     }
 
-    showToast(`${launcherKey} 正在唤起`);
+    showToast(getMessage('launchingDownloader', launcherKey));
     openDownloader(url, launcherKey);
     return 'opened';
 }
