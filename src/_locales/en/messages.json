@@ -1,0 +1,410 @@
+{
+    "extensionName": {
+        "message": "EdgeDL",
+        "description": "Extension name shown in the browser and store listing."
+    },
+    "extensionShortName": {
+        "message": "EdgeDL",
+        "description": "Short extension name shown where space is limited."
+    },
+    "extensionDescription": {
+        "message": "Use external download managers in Microsoft Edge for Android, with per-site control and an option to use Edge's built-in downloader.",
+        "description": "Extension description shown in the browser and store listing."
+    },
+    "popupAriaLabel": {
+        "message": "EdgeDL extension menu",
+        "description": "Accessible label for the extension popup."
+    },
+    "extensionSubtitle": {
+        "message": "Use external download managers in Edge for Android",
+        "description": "Subtitle displayed below the EdgeDL name."
+    },
+    "currentSite": {
+        "message": "Current site",
+        "description": "Label above the active site's hostname."
+    },
+    "loading": {
+        "message": "Loading...",
+        "description": "Status shown while site information is loading."
+    },
+    "siteTakeover": {
+        "message": "Site handling",
+        "description": "Heading for per-site download interception controls."
+    },
+    "siteTakeoverDescription": {
+        "message": "Handle download links on this site",
+        "description": "Description shown when EdgeDL handles the current site."
+    },
+    "toggleCurrentSite": {
+        "message": "Toggle download handling for the current site",
+        "description": "Accessible label for the per-site toggle."
+    },
+    "pagePicker": {
+        "message": "Page picker",
+        "description": "Button that opens the download manager picker in the active page."
+    },
+    "refreshStatus": {
+        "message": "Refresh status",
+        "description": "Button that refreshes popup state."
+    },
+    "aria2ConnectionDescription": {
+        "message": "Connect to aria2",
+        "description": "Description for the Aria2 RPC settings section."
+    },
+    "expandAria2Settings": {
+        "message": "Expand Aria2 RPC settings",
+        "description": "Accessible label for expanding Aria2 RPC settings."
+    },
+    "collapseAria2Settings": {
+        "message": "Collapse Aria2 RPC settings",
+        "description": "Accessible label for collapsing Aria2 RPC settings."
+    },
+    "rpcEndpoint": {
+        "message": "RPC endpoint",
+        "description": "Label for the Aria2 RPC endpoint field."
+    },
+    "rpcSecret": {
+        "message": "RPC secret",
+        "description": "Label for the Aria2 RPC secret field."
+    },
+    "rpcSecretPlaceholder": {
+        "message": "Leave blank if not configured",
+        "description": "Placeholder for an optional Aria2 RPC secret."
+    },
+    "downloadDirectory": {
+        "message": "Download directory",
+        "description": "Label for the Aria2 download directory field."
+    },
+    "downloadDirectoryPlaceholder": {
+        "message": "Default directory",
+        "description": "Placeholder used when aria2's default directory will be used."
+    },
+    "saveConfiguration": {
+        "message": "Save settings",
+        "description": "Button that saves Aria2 RPC settings."
+    },
+    "testConnection": {
+        "message": "Test connection",
+        "description": "Button that tests the Aria2 RPC connection."
+    },
+    "rpcSecretLocalOnly": {
+        "message": "The secret is stored only on this device",
+        "description": "Privacy note below the Aria2 RPC settings."
+    },
+    "defaultDownloader": {
+        "message": "Default downloader",
+        "description": "Heading and accessible label for default downloader controls."
+    },
+    "askEveryTime": {
+        "message": "Ask every time",
+        "description": "Status shown when no default downloader is selected."
+    },
+    "clearDefaultDownloader": {
+        "message": "Clear default downloader",
+        "description": "Tooltip and accessible label for clearing the default downloader."
+    },
+    "noDefaultDownloader": {
+        "message": "No default downloader selected",
+        "description": "Accessible label when the clear button has no selection to clear."
+    },
+    "ask": {
+        "message": "Ask",
+        "description": "Short label for asking which downloader to use."
+    },
+    "customDownloader": {
+        "message": "Custom",
+        "description": "Fallback label for an unknown configured downloader."
+    },
+    "aria2DownloaderDescription": {
+        "message": "Add the download to aria2 over RPC",
+        "description": "Tooltip describing the Aria2 downloader option."
+    },
+    "edgeDownloaderDescription": {
+        "message": "Use Edge's built-in downloader",
+        "description": "Tooltip describing the Edge downloader option."
+    },
+    "currentPageUnavailable": {
+        "message": "This page is unavailable",
+        "description": "Status shown when EdgeDL cannot control the active page."
+    },
+    "unavailable": {
+        "message": "Unavailable",
+        "description": "Short status for an unavailable page."
+    },
+    "takeoverActive": {
+        "message": "Active",
+        "description": "Short status shown when site handling is active."
+    },
+    "takeoverPaused": {
+        "message": "Paused",
+        "description": "Short status shown when site handling is paused."
+    },
+    "edgeDefaultDisablesTakeover": {
+        "message": "Edge is the default, so download handling is off",
+        "description": "Explanation shown when Edge's built-in downloader is the default."
+    },
+    "configurationSaved": {
+        "message": "Settings saved",
+        "description": "Status shown after settings are saved."
+    },
+    "connecting": {
+        "message": "Connecting...",
+        "description": "Status shown while connecting to aria2."
+    },
+    "aria2NoVersion": {
+        "message": "aria2 did not return a version",
+        "description": "Error shown when aria2's version response is empty."
+    },
+    "aria2ConnectedStatus": {
+        "message": "Connected - aria2 $VERSION$",
+        "description": "Connection status including the detected aria2 version.",
+        "placeholders": {
+            "version": {
+                "content": "$1",
+                "example": "1.37.0"
+            }
+        }
+    },
+    "aria2ConnectedToast": {
+        "message": "Connected to Aria2",
+        "description": "Confirmation shown after a successful Aria2 connection test."
+    },
+    "defaultDownloaderSummary": {
+        "message": "Default: $DOWNLOADER$",
+        "description": "Current default downloader summary.",
+        "placeholders": {
+            "downloader": {
+                "content": "$1",
+                "example": "Aria2 RPC"
+            }
+        }
+    },
+    "defaultDownloaderSet": {
+        "message": "Default downloader set to $DOWNLOADER$",
+        "description": "Confirmation shown after choosing a default downloader.",
+        "placeholders": {
+            "downloader": {
+                "content": "$1",
+                "example": "1DM"
+            }
+        }
+    },
+    "saveDefaultDownloaderFailed": {
+        "message": "Could not save the default downloader",
+        "description": "Error shown when saving the default downloader fails."
+    },
+    "toggleAria2SettingsFailed": {
+        "message": "Could not toggle Aria2 settings",
+        "description": "Error shown when expanding or collapsing Aria2 settings fails."
+    },
+    "aria2ConfigurationSaved": {
+        "message": "Aria2 settings saved",
+        "description": "Confirmation shown after Aria2 settings are saved."
+    },
+    "saveAria2ConfigurationFailed": {
+        "message": "Could not save Aria2 settings",
+        "description": "Error shown when saving Aria2 settings fails."
+    },
+    "aria2ConnectionFailed": {
+        "message": "Could not connect to Aria2",
+        "description": "Error shown when an Aria2 connection test fails."
+    },
+    "sitePausedToast": {
+        "message": "Site handling paused",
+        "description": "Confirmation shown after pausing handling for the current site."
+    },
+    "siteTakeoverToast": {
+        "message": "Site handling enabled",
+        "description": "Confirmation shown after enabling handling for the current site."
+    },
+    "toggleSiteFailed": {
+        "message": "Could not change the site setting",
+        "description": "Error shown when changing the current site's setting fails."
+    },
+    "openPickerFailed": {
+        "message": "Could not open the picker",
+        "description": "Error shown when the in-page downloader picker cannot open."
+    },
+    "statusRefreshed": {
+        "message": "Status refreshed",
+        "description": "Confirmation shown after popup state is refreshed."
+    },
+    "refreshFailed": {
+        "message": "Could not refresh the status",
+        "description": "Error shown when popup state cannot be refreshed."
+    },
+    "defaultCleared": {
+        "message": "Default downloader cleared",
+        "description": "Confirmation shown after clearing the default downloader."
+    },
+    "clearDefaultFailed": {
+        "message": "Could not clear the default downloader",
+        "description": "Error shown when clearing the default downloader fails."
+    },
+    "popupInitializationFailed": {
+        "message": "Could not initialize the menu",
+        "description": "Error shown when the extension popup cannot initialize."
+    },
+    "chooseDownloader": {
+        "message": "Choose a downloader",
+        "description": "Heading in the in-page downloader picker."
+    },
+    "copyDownloadLink": {
+        "message": "Copy download link",
+        "description": "Tooltip and accessible label for copying a download URL."
+    },
+    "downloadLinkCopied": {
+        "message": "Download link copied",
+        "description": "Accessible confirmation after copying a download URL."
+    },
+    "copyFailed": {
+        "message": "Could not copy the link",
+        "description": "Accessible error shown when copying a download URL fails."
+    },
+    "noDownloadLink": {
+        "message": "No download link to copy",
+        "description": "Tooltip shown when the picker has no download URL."
+    },
+    "setDefaultDownloader": {
+        "message": "Set as default downloader",
+        "description": "Label for the default downloader checkbox."
+    },
+    "sendingToAria2": {
+        "message": "Sending to Aria2",
+        "description": "Status shown while submitting a download to aria2."
+    },
+    "aria2RequestFailed": {
+        "message": "Aria2 request failed: $ERROR$",
+        "description": "Error shown when submitting a download to aria2 fails.",
+        "placeholders": {
+            "error": {
+                "content": "$1",
+                "example": "Unauthorized"
+            }
+        }
+    },
+    "addedToAria2": {
+        "message": "Added to Aria2",
+        "description": "Confirmation shown after a download is added to aria2."
+    },
+    "openDownloaderFailed": {
+        "message": "Could not open the downloader",
+        "description": "Error shown when an external downloader cannot be opened."
+    },
+    "launchingDownloader": {
+        "message": "Opening $DOWNLOADER$",
+        "description": "Status shown while opening an external downloader.",
+        "placeholders": {
+            "downloader": {
+                "content": "$1",
+                "example": "1DM"
+            }
+        }
+    },
+    "takeoverSkipped": {
+        "message": "Download handling skipped",
+        "description": "Status shown when EdgeDL lets Edge handle a download."
+    },
+    "siteTakeoverDisabled": {
+        "message": "Download handling disabled for this site",
+        "description": "Confirmation shown when the current site is excluded."
+    },
+    "siteTakeoverEnabled": {
+        "message": "Download handling enabled for this site",
+        "description": "Confirmation shown when the current site is included."
+    },
+    "actionEdgeDefault": {
+        "message": "EdgeDL: Edge is the default downloader",
+        "description": "Toolbar action title when Edge is the default downloader."
+    },
+    "actionSitePaused": {
+        "message": "EdgeDL: Download handling is paused for this site",
+        "description": "Toolbar action title when the current site is excluded."
+    },
+    "actionSiteActive": {
+        "message": "EdgeDL: Download handling is active for this site",
+        "description": "Toolbar action title when the current site is handled."
+    },
+    "aria2ConnectionTimedOut": {
+        "message": "Connection to aria2 timed out",
+        "description": "Error returned when an Aria2 RPC request times out."
+    },
+    "rpcEndpointProtocolsOnly": {
+        "message": "The RPC endpoint must use HTTP or HTTPS",
+        "description": "Validation error for an unsupported Aria2 RPC endpoint protocol."
+    },
+    "rpcEndpointMissingHostname": {
+        "message": "The RPC endpoint is missing a hostname",
+        "description": "Validation error for an Aria2 RPC endpoint without a hostname."
+    },
+    "rpcEndpointInvalid": {
+        "message": "The RPC endpoint is not a valid URL",
+        "description": "Validation error for a malformed Aria2 RPC endpoint."
+    },
+    "rpcEndpointEmbeddedCredentials": {
+        "message": "The RPC endpoint contains credentials; use the RPC secret field instead",
+        "description": "Validation error for credentials embedded in an Aria2 RPC URL."
+    },
+    "aria2RpcError": {
+        "message": "aria2 RPC error ($CODE$): $ERROR$",
+        "description": "Error returned by the Aria2 RPC server.",
+        "placeholders": {
+            "code": {
+                "content": "$1",
+                "example": "1"
+            },
+            "error": {
+                "content": "$2",
+                "example": "Unauthorized"
+            }
+        }
+    },
+    "aria2UnableToConnect": {
+        "message": "Could not connect to aria2: $ERROR$",
+        "description": "Network error returned while connecting to aria2.",
+        "placeholders": {
+            "error": {
+                "content": "$1",
+                "example": "Connection refused"
+            }
+        }
+    },
+    "aria2HttpError": {
+        "message": "aria2 RPC returned HTTP $STATUS$",
+        "description": "HTTP error returned by the Aria2 RPC endpoint.",
+        "placeholders": {
+            "status": {
+                "content": "$1",
+                "example": "401"
+            }
+        }
+    },
+    "aria2InvalidJson": {
+        "message": "aria2 RPC returned invalid JSON",
+        "description": "Error returned for a malformed JSON response from aria2."
+    },
+    "aria2InvalidResponseIdentity": {
+        "message": "The aria2 RPC response has an invalid jsonrpc version or ID",
+        "description": "Error returned for an invalid Aria2 RPC response identity."
+    },
+    "aria2MissingResultOrError": {
+        "message": "The aria2 RPC response must contain either result or error",
+        "description": "Error returned for an incomplete Aria2 RPC response."
+    },
+    "aria2InvalidErrorObject": {
+        "message": "The aria2 RPC response contains an invalid error object",
+        "description": "Error returned for a malformed Aria2 RPC error."
+    },
+    "aria2InvalidVersion": {
+        "message": "aria2 RPC returned invalid version information",
+        "description": "Error returned for a malformed aria2 version result."
+    },
+    "aria2DownloadProtocolsOnly": {
+        "message": "aria2 supports only HTTP or HTTPS download URLs",
+        "description": "Validation error for an unsupported download URL protocol."
+    },
+    "aria2InvalidGid": {
+        "message": "aria2 RPC returned an invalid task GID",
+        "description": "Error returned when aria2 does not provide a valid task identifier."
+    }
+}

@@ -2,6 +2,8 @@
  * @module components/toast
  * @description 轻量级反馈系统：提供非侵入式的状态通知，支持系统级主题自适应及生命周期管理。
  */
+import { applyLocaleDirection } from '@/pkg/browser/i18n';
+
 let styleInjected = false;
 let activeToast: HTMLElement | null = null;
 
@@ -104,6 +106,7 @@ export function showToast(message: string, options: { duration?: number; type?: 
 
         const toast = document.createElement('div');
         toast.className = 'edgedl-toast';
+        applyLocaleDirection(toast);
         toast.dataset.theme = getTheme();
         toast.dataset.type = type;
         toast.textContent = message;

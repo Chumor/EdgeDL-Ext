@@ -1,4 +1,5 @@
 import { storage } from '@/pkg/browser/api';
+import { getMessage } from '@/pkg/browser/i18n';
 import { type Aria2RuntimeMessage, type Aria2RuntimeResponse, isAria2RuntimeMessage } from '@/pkg/browser/messages';
 import {
     ARIA2_CONFIG_KEY,
@@ -61,12 +62,15 @@ async function updateActionState(tabId: number, url?: string) {
     ]);
 
     if (defaultDownloader === EDGE_DOWNLOADER_VALUE) {
-        await chrome.action.setTitle({ tabId, title: 'EdgeDL：默认使用 Edge，不接管下载' });
+        await chrome.action.setTitle({ tabId, title: getMessage('actionEdgeDefault') });
         return;
     }
 
     const siteBlocked = blockedHosts.some((item) => item.toLowerCase() === host);
-    await chrome.action.setTitle({ tabId, title: siteBlocked ? 'EdgeDL：本站已暂停' : 'EdgeDL：本站接管中' });
+    await chrome.action.setTitle({
+        tabId,
+        title: getMessage(siteBlocked ? 'actionSitePaused' : 'actionSiteActive'),
+    });
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

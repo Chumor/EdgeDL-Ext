@@ -21,6 +21,7 @@ import {
 } from '@/pkg/core/intercept';
 
 import { extractUrlFromOnclick } from '@/pkg/utils/url';
+import { getMessage } from '@/pkg/browser/i18n';
 import { EDGEDL_MESSAGE_SOURCE, isDownloadRequestMessage } from '@/pkg/browser/messages';
 import { DEFAULT_DOWNLOADER_KEY } from '@/pkg/services/config';
 
@@ -108,7 +109,7 @@ async function handleDownloadCandidate(candidate: DownloadClickCandidate, option
 
     if (!isInterceptEnabled()) {
         if (options.showSkippedToast) {
-            showToast('已跳过接管', { duration: 1500, type: 'info' });
+            showToast(getMessage('takeoverSkipped'), { duration: 1500, type: 'info' });
         }
         return false;
     }
@@ -135,7 +136,7 @@ function handleClick(event: MouseEvent) {
     if (!isDownloadCandidate(candidate.url, candidate.explicit)) return;
 
     if (!isInterceptEnabled()) {
-        showToast('已跳过接管', { duration: 1500, type: 'info' });
+        showToast(getMessage('takeoverSkipped'), { duration: 1500, type: 'info' });
         return;
     }
 
@@ -198,7 +199,10 @@ async function toggleCurrentSite() {
 
     await setInterceptSites(nextSites);
     postPageBridgeState();
-    showToast(blocked ? '已禁止接管本站' : '已允许接管本站', { duration: 1500, type: 'info' });
+    showToast(getMessage(blocked ? 'siteTakeoverDisabled' : 'siteTakeoverEnabled'), {
+        duration: 1500,
+        type: 'info',
+    });
 
     return { blocked, host };
 }

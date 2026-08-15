@@ -3,6 +3,7 @@
  * @description 交互式分发控制器：提供可视化 UI 供用户选择下载目标，并处理下载器偏好设置的持久化逻辑。
  */
 import { storage } from '@/pkg/browser/api';
+import { applyLocaleDirection, getMessage } from '@/pkg/browser/i18n';
 import { ARIA2_DOWNLOADER_VALUE } from '@/pkg/core/aria2';
 import { DEFAULT_DOWNLOADER_KEY, DOWNLOADERS, EDGE_DOWNLOADER_VALUE, getEdgeDLVersion } from '@/pkg/services/config';
 import { downloaderIcons } from './assets/icons';
@@ -78,9 +79,9 @@ function createCopyIcon(state: CopyButtonState) {
 
 function setCopyButtonState(button: HTMLButtonElement, state: CopyButtonState) {
     const labels: Record<CopyButtonState, string> = {
-        copy: '复制下载链接',
-        copied: '已复制下载链接',
-        failed: '复制失败',
+        copy: getMessage('copyDownloadLink'),
+        copied: getMessage('downloadLinkCopied'),
+        failed: getMessage('copyFailed'),
     };
 
     button.classList.toggle('copied', state === 'copied');
@@ -118,9 +119,10 @@ function createPickerContent(shadow: ShadowRoot, downloadUrl: string) {
 
     const card = document.createElement('div');
     card.className = 'edgedl-card';
+    applyLocaleDirection(card);
 
     const heading = document.createElement('h3');
-    heading.textContent = '选择下载器';
+    heading.textContent = getMessage('chooseDownloader');
 
     const versionTag = document.createElement('div');
     versionTag.className = 'edgedl-version-tag';
@@ -130,7 +132,7 @@ function createPickerContent(shadow: ShadowRoot, downloadUrl: string) {
     copyButton.className = 'edgedl-copy-button';
     copyButton.type = 'button';
     copyButton.disabled = !downloadUrl;
-    copyButton.title = downloadUrl ? '复制下载链接' : '没有可复制的下载链接';
+    copyButton.title = getMessage(downloadUrl ? 'copyDownloadLink' : 'noDownloadLink');
     copyButton.setAttribute('aria-label', copyButton.title);
     copyButton.setAttribute('aria-live', 'polite');
     copyButton.appendChild(createCopyIcon('copy'));
@@ -161,7 +163,7 @@ function createPickerContent(shadow: ShadowRoot, downloadUrl: string) {
     checkbox.type = 'checkbox';
 
     const labelText = document.createElement('span');
-    labelText.textContent = '设为默认下载器';
+    labelText.textContent = getMessage('setDefaultDownloader');
 
     label.append(checkbox, labelText);
     card.append(heading, versionTag, copyButton, options, label);

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>EdgeDL</title>
+        <title data-i18n="extensionName">EdgeDL</title>
         <style>
             :root {
                 color-scheme: light dark;
@@ -579,13 +579,15 @@
         </style>
     </head>
     <body>
-        <main class="app" aria-label="EdgeDL 扩展管理菜单">
+        <main class="app" aria-label="EdgeDL extension menu" data-i18n-aria-label="popupAriaLabel">
             <header class="topbar">
                 <div class="brand">
                     <img id="brand-icon" class="brand-icon" alt="" />
                     <div>
-                        <h1>EdgeDL</h1>
-                        <div class="subtitle">在 Android Edge 中使用外部下载器</div>
+                        <h1 data-i18n="extensionName">EdgeDL</h1>
+                        <div class="subtitle" data-i18n="extensionSubtitle">
+                            Use external download managers in Edge for Android
+                        </div>
                     </div>
                 </div>
                 <div id="version" class="version">v-</div>
@@ -593,30 +595,39 @@
 
             <div class="status-row">
                 <div class="status-meta">
-                    <div class="status-kicker">当前站点</div>
-                    <div id="current-host" class="host">读取中…</div>
+                    <div class="status-kicker" data-i18n="currentSite">Current site</div>
+                    <div id="current-host" class="host" data-i18n="loading">Loading...</div>
                 </div>
-                <div id="site-pill" class="pill"><span class="dot"></span><span>读取中</span></div>
+                <div id="site-pill" class="pill">
+                    <span class="dot"></span><span data-i18n="loading">Loading...</span>
+                </div>
             </div>
 
             <div class="content">
                 <section class="group">
                     <div class="site-card">
                         <div>
-                            <h2 class="group-title">站点接管</h2>
-                            <div id="site-desc" class="group-desc">处理本站下载跳转</div>
+                            <h2 class="group-title" data-i18n="siteTakeover">Site handling</h2>
+                            <div id="site-desc" class="group-desc" data-i18n="siteTakeoverDescription">
+                                Handle download links on this site
+                            </div>
                         </div>
                         <button
                             id="site-switch"
                             class="switch"
                             type="button"
-                            aria-label="切换当前站点接管状态"
+                            aria-label="Toggle download handling for the current site"
+                            data-i18n-aria-label="toggleCurrentSite"
                             disabled
                         ></button>
                     </div>
                     <div class="actions">
-                        <button id="open-picker" class="action primary" type="button">页面选择器</button>
-                        <button id="reload-state" class="action" type="button">刷新状态</button>
+                        <button id="open-picker" class="action primary" type="button" data-i18n="pagePicker">
+                            Page picker
+                        </button>
+                        <button id="reload-state" class="action" type="button" data-i18n="refreshStatus">
+                            Refresh status
+                        </button>
                     </div>
                 </section>
 
@@ -624,13 +635,14 @@
                     <div class="group-head">
                         <div>
                             <h2 class="group-title">Aria2 RPC</h2>
-                            <div class="group-desc">连接 aria2</div>
+                            <div class="group-desc" data-i18n="aria2ConnectionDescription">Connect to aria2</div>
                         </div>
                         <button
                             id="aria2-settings-switch"
                             class="switch"
                             type="button"
-                            aria-label="展开 Aria2 RPC 设置"
+                            aria-label="Expand Aria2 RPC settings"
+                            data-i18n-aria-label="expandAria2Settings"
                             aria-controls="aria2-form"
                             aria-expanded="false"
                             aria-pressed="false"
@@ -638,7 +650,7 @@
                     </div>
                     <form id="aria2-form" class="rpc-form" hidden>
                         <label class="rpc-field" for="aria2-endpoint">
-                            RPC 地址
+                            <span data-i18n="rpcEndpoint">RPC endpoint</span>
                             <input
                                 id="aria2-endpoint"
                                 class="rpc-input"
@@ -648,31 +660,43 @@
                             />
                         </label>
                         <label class="rpc-field" for="aria2-secret">
-                            RPC 密钥
+                            <span data-i18n="rpcSecret">RPC secret</span>
                             <input
                                 id="aria2-secret"
                                 class="rpc-input"
                                 type="password"
                                 autocomplete="off"
-                                placeholder="未设置可留空"
+                                placeholder="Leave blank if not configured"
+                                data-i18n-placeholder="rpcSecretPlaceholder"
                             />
                         </label>
                         <label class="rpc-field" for="aria2-directory">
-                            下载目录
+                            <span data-i18n="downloadDirectory">Download directory</span>
                             <input
                                 id="aria2-directory"
                                 class="rpc-input"
                                 type="text"
                                 autocomplete="off"
-                                placeholder="默认目录"
+                                placeholder="Default directory"
+                                data-i18n-placeholder="downloadDirectoryPlaceholder"
                             />
                         </label>
                         <div class="actions">
-                            <button id="aria2-save" class="action primary" type="submit">保存配置</button>
-                            <button id="aria2-test" class="action" type="button">测试连接</button>
+                            <button id="aria2-save" class="action primary" type="submit" data-i18n="saveConfiguration">
+                                Save settings
+                            </button>
+                            <button id="aria2-test" class="action" type="button" data-i18n="testConnection">
+                                Test connection
+                            </button>
                         </div>
-                        <div id="aria2-status" class="rpc-status" role="status" aria-live="polite">
-                            密钥仅保存在本地
+                        <div
+                            id="aria2-status"
+                            class="rpc-status"
+                            role="status"
+                            aria-live="polite"
+                            data-i18n="rpcSecretLocalOnly"
+                        >
+                            The secret is stored only on this device
                         </div>
                     </form>
                 </section>
@@ -680,15 +704,17 @@
                 <section class="group">
                     <div class="group-head">
                         <div>
-                            <h2 class="group-title">默认下载器</h2>
-                            <div id="default-desc" class="group-desc">下载时询问</div>
+                            <h2 class="group-title" data-i18n="defaultDownloader">Default downloader</h2>
+                            <div id="default-desc" class="group-desc" data-i18n="askEveryTime">Ask every time</div>
                         </div>
                         <button
                             id="clear-default"
                             class="icon-button"
                             type="button"
-                            title="清除默认下载器"
-                            aria-label="清除默认下载器"
+                            title="Clear default downloader"
+                            data-i18n-title="clearDefaultDownloader"
+                            aria-label="Clear default downloader"
+                            data-i18n-aria-label="clearDefaultDownloader"
                         >
                             <svg
                                 aria-hidden="true"
@@ -707,7 +733,12 @@
                             </svg>
                         </button>
                     </div>
-                    <div id="downloader-grid" class="downloader-grid" aria-label="默认下载器"></div>
+                    <div
+                        id="downloader-grid"
+                        class="downloader-grid"
+                        aria-label="Default downloader"
+                        data-i18n-aria-label="defaultDownloader"
+                    ></div>
                 </section>
             </div>
 
