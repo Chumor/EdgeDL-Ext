@@ -1,6 +1,6 @@
 {
     "name": "edgedl-ext",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "EdgeDL,让 Android Edge 浏览器使用外部下载器下载文件的浏览器扩展",
     "author": "Chumor",
     "license": "Apache-2.0",

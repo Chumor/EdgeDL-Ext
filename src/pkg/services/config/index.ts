@@ -22,5 +22,5 @@ export const DEFAULT_DOWNLOADER_KEY = 'edgedl-default-downloader';
 
 // 版本信息
 export function getEdgeDLVersion() {
-    return '1.1.0';
+    return '1.2.0';
 }
