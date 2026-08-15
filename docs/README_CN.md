@@ -46,7 +46,8 @@
 
 ## 安装
 
-- **稳定版：** https://github.com/Chumor/EdgeDL-Ext/releases/latest
+- **Microsoft Edge Add-ons Store：** https://microsoftedge.microsoft.com/addons/detail/pclohkfpeeblaaijmjijinnlbmakdfoe
+- **GitHub Releases：** https://github.com/Chumor/EdgeDL-Ext/releases/latest
 
 ## 权限说明
 
