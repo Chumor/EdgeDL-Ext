@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { EDGEDL_MESSAGE_SOURCE, isDownloadRequestMessage } from '../../src/pkg/browser/messages.ts';
+import {
+    EDGEDL_MESSAGE_SOURCE,
+    isAria2RuntimeMessage,
+    isDownloadRequestMessage,
+} from '../../src/pkg/browser/messages.ts';
 
 test('validates download request messages with an optional explicit control flag', () => {
     const message = {
@@ -13,6 +17,40 @@ test('validates download request messages with an optional explicit control flag
     assert.equal(isDownloadRequestMessage(message), true);
     assert.equal(isDownloadRequestMessage({ ...message, explicitControl: true }), true);
     assert.equal(isDownloadRequestMessage({ ...message, explicitControl: false }), true);
+});
+
+test('validates aria2 runtime messages', () => {
+    assert.equal(
+        isAria2RuntimeMessage({
+            referer: 'https://example.com/page',
+            source: EDGEDL_MESSAGE_SOURCE,
+            type: 'aria2-add-uri',
+            url: 'https://example.com/file.zip',
+        }),
+        true,
+    );
+    assert.equal(isAria2RuntimeMessage({ source: EDGEDL_MESSAGE_SOURCE, type: 'aria2-test-connection' }), true);
+    assert.equal(isAria2RuntimeMessage({ source: EDGEDL_MESSAGE_SOURCE, type: 'aria2-add-uri', url: null }), false);
+    assert.equal(isAria2RuntimeMessage({ source: 'page', type: 'aria2-test-connection' }), false);
+    assert.equal(
+        isAria2RuntimeMessage({
+            referer: 123,
+            source: EDGEDL_MESSAGE_SOURCE,
+            type: 'aria2-add-uri',
+            url: 'https://example.com/file.zip',
+        }),
+        false,
+    );
+    assert.equal(
+        isAria2RuntimeMessage({
+            referer: { href: 'https://example.com/page' },
+            source: EDGEDL_MESSAGE_SOURCE,
+            type: 'aria2-add-uri',
+            url: 'https://example.com/file.zip',
+        }),
+        false,
+    );
+    assert.equal(isAria2RuntimeMessage({ source: EDGEDL_MESSAGE_SOURCE, type: 'aria2-add-uri' }), false);
 });
 
 test('rejects malformed download request messages', () => {

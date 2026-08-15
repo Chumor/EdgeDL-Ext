@@ -1,9 +1,41 @@
+import { storage } from '@/pkg/browser/api';
+import { type Aria2RuntimeMessage, type Aria2RuntimeResponse, isAria2RuntimeMessage } from '@/pkg/browser/messages';
+import {
+    ARIA2_CONFIG_KEY,
+    DEFAULT_ARIA2_CONFIG,
+    type Aria2Config,
+    addAria2Uri,
+    getAria2Version,
+    normalizeAria2Config,
+} from '@/pkg/core/aria2';
 import { getInterceptSitesKey } from '@/pkg/core/intercept';
 import { DEFAULT_DOWNLOADER_KEY, EDGE_DOWNLOADER_VALUE } from '@/pkg/services/config';
-import { storage } from '@/pkg/browser/api';
+import { getErrorMessage } from '@/pkg/utils/error';
 
 async function ensureDefaultStorage() {
     await Promise.all([storage.get(DEFAULT_DOWNLOADER_KEY, ''), storage.get<string[]>(getInterceptSitesKey(), [])]);
+}
+
+async function getAria2Config() {
+    const value = await storage.get<Aria2Config>(ARIA2_CONFIG_KEY, DEFAULT_ARIA2_CONFIG);
+    return normalizeAria2Config(value);
+}
+
+async function handleAria2Message(message: Aria2RuntimeMessage): Promise<Aria2RuntimeResponse> {
+    try {
+        const config = await getAria2Config();
+
+        if (message.type === 'aria2-test-connection') {
+            const result = await getAria2Version(config);
+            return { ok: true, version: result.version };
+        }
+
+        const gid = await addAria2Uri(config, message.url, { referer: message.referer });
+        return { gid, ok: true };
+    } catch (error: unknown) {
+        console.error('[EdgeDL] aria2 RPC request failed', error);
+        return { error: getErrorMessage(error), ok: false };
+    }
 }
 
 function getHostname(url?: string) {
@@ -36,6 +68,13 @@ async function updateActionState(tabId: number, url?: string) {
     const siteBlocked = blockedHosts.some((item) => item.toLowerCase() === host);
     await chrome.action.setTitle({ tabId, title: siteBlocked ? 'EdgeDL：本站已暂停' : 'EdgeDL：本站接管中' });
 }
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (!isAria2RuntimeMessage(message)) return false;
+
+    void handleAria2Message(message).then(sendResponse);
+    return true;
+});
 
 chrome.runtime.onInstalled.addListener(() => {
     void ensureDefaultStorage().catch((error: unknown) => {

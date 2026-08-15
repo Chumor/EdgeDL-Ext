@@ -30,4 +30,8 @@ export async function sendMessageToTab<TResponse>(tabId: number, message: unknow
     return chrome.tabs.sendMessage(tabId, message) as Promise<TResponse>;
 }
 
+export async function sendRuntimeMessage<TResponse>(message: unknown) {
+    return chrome.runtime.sendMessage(message) as Promise<TResponse>;
+}
+
 export const storage = createStorageAdapter(chrome.storage.local);

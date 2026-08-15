@@ -24,7 +24,14 @@ export interface CancelDownloadRequestResult {
 export type DownloadRequestResult =
     CancelDownloadRequestResult | EdgeDownloadRequestResult | ExternalDownloadRequestResult;
 
-export async function requestDownload(url: string): Promise<DownloadRequestResult> {
+export interface DownloadRequestOptions {
+    referer?: string;
+}
+
+export async function requestDownload(
+    url: string,
+    options: DownloadRequestOptions = {},
+): Promise<DownloadRequestResult> {
     if (!url) return { type: 'cancel' };
 
     const downloader = await storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null);
@@ -34,7 +41,8 @@ export async function requestDownload(url: string): Promise<DownloadRequestResul
     }
 
     if (downloader) {
-        if (openDownload(url, downloader)) return { type: 'external' };
+        const result = await openDownload(url, downloader, options.referer);
+        if (result !== 'unsupported') return { type: 'external' };
 
         await storage.remove(DEFAULT_DOWNLOADER_KEY);
     }
@@ -44,7 +52,8 @@ export async function requestDownload(url: string): Promise<DownloadRequestResul
     });
 
     if (selected.type === 'external') {
-        if (openDownload(url, selected.packageName)) return { type: 'external' };
+        const result = await openDownload(url, selected.packageName, options.referer);
+        if (result !== 'unsupported') return { type: 'external' };
 
         await storage.remove(DEFAULT_DOWNLOADER_KEY);
         return { type: 'cancel' };

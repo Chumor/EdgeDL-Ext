@@ -9,6 +9,7 @@ declare namespace chrome {
 
         const lastError: { message?: string } | undefined;
         function getURL(path: string): string;
+        function sendMessage(message: unknown): Promise<unknown>;
 
         const onInstalled: {
             addListener(callback: () => void): void;

@@ -54,17 +54,25 @@
                 -webkit-font-smoothing: antialiased;
             }
 
-            button {
+            button,
+            input {
                 font: inherit;
                 color: inherit;
+            }
+
+            button {
                 border: 0;
                 -webkit-tap-highlight-color: transparent;
             }
 
             .app {
                 width: 100%;
+                max-height: 100vh;
                 background: var(--surface);
-                overflow: hidden;
+                overflow-x: hidden;
+                overflow-y: auto;
+                overscroll-behavior-y: contain;
+                -webkit-overflow-scrolling: touch;
             }
 
             .topbar {
@@ -178,7 +186,7 @@
             .content {
                 display: grid;
                 gap: 13px;
-                padding: 0 14px 0;
+                padding: 0 14px 14px;
             }
             .group {
                 display: grid;
@@ -263,27 +271,9 @@
 
             .downloader-grid {
                 display: flex;
-                max-height: 330px;
                 flex-direction: column;
                 gap: 8px;
-                overflow-x: hidden;
-                overflow-y: auto;
-                overscroll-behavior-y: contain;
-                padding: 1px 5px 1px 1px;
-                scroll-padding-block: 1px;
-                scroll-snap-type: y proximity;
-                scrollbar-color: var(--card-border) transparent;
-                scrollbar-width: thin;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .downloader-grid::-webkit-scrollbar {
-                width: 4px;
-            }
-
-            .downloader-grid::-webkit-scrollbar-thumb {
-                border-radius: 999px;
-                background: var(--card-border);
+                padding: 1px;
             }
 
             .downloader {
@@ -298,7 +288,6 @@
                 border-radius: var(--radius-md);
                 background: var(--fill);
                 cursor: pointer;
-                scroll-snap-align: start;
                 touch-action: pan-y;
                 transition:
                     transform 140ms ease,
@@ -357,6 +346,57 @@
             .downloader.selected .label {
                 color: var(--blue);
                 font-weight: 650;
+            }
+
+            .rpc-form {
+                display: grid;
+                gap: 9px;
+            }
+
+            .rpc-form[hidden] {
+                display: none;
+            }
+
+            .rpc-field {
+                display: grid;
+                gap: 4px;
+                color: var(--muted);
+                font-size: 11px;
+                line-height: 1.25;
+            }
+
+            .rpc-input {
+                width: 100%;
+                min-height: 36px;
+                padding: 7px 9px;
+                border: 1px solid var(--card-border);
+                border-radius: 8px;
+                outline: none;
+                background: var(--fill);
+                color: var(--text);
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .rpc-input:focus {
+                border-color: var(--blue);
+                box-shadow: 0 0 0 2px var(--blue-soft);
+            }
+
+            .rpc-status {
+                min-height: 16px;
+                color: var(--muted);
+                font-size: 11px;
+                line-height: 1.4;
+                overflow-wrap: anywhere;
+            }
+
+            .rpc-status.success {
+                color: var(--success);
+            }
+
+            .rpc-status.error {
+                color: var(--danger);
             }
 
             .actions {
@@ -578,6 +618,63 @@
                         <button id="open-picker" class="action primary" type="button">页面选择器</button>
                         <button id="reload-state" class="action" type="button">刷新状态</button>
                     </div>
+                </section>
+
+                <section id="aria2-settings" class="group">
+                    <div class="group-head">
+                        <div>
+                            <h2 class="group-title">Aria2 RPC</h2>
+                            <div class="group-desc">连接 aria2</div>
+                        </div>
+                        <button
+                            id="aria2-settings-switch"
+                            class="switch"
+                            type="button"
+                            aria-label="展开 Aria2 RPC 设置"
+                            aria-controls="aria2-form"
+                            aria-expanded="false"
+                            aria-pressed="false"
+                        ></button>
+                    </div>
+                    <form id="aria2-form" class="rpc-form" hidden>
+                        <label class="rpc-field" for="aria2-endpoint">
+                            RPC 地址
+                            <input
+                                id="aria2-endpoint"
+                                class="rpc-input"
+                                type="url"
+                                inputmode="url"
+                                autocomplete="off"
+                            />
+                        </label>
+                        <label class="rpc-field" for="aria2-secret">
+                            RPC 密钥
+                            <input
+                                id="aria2-secret"
+                                class="rpc-input"
+                                type="password"
+                                autocomplete="off"
+                                placeholder="未设置可留空"
+                            />
+                        </label>
+                        <label class="rpc-field" for="aria2-directory">
+                            下载目录
+                            <input
+                                id="aria2-directory"
+                                class="rpc-input"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="默认目录"
+                            />
+                        </label>
+                        <div class="actions">
+                            <button id="aria2-save" class="action primary" type="submit">保存配置</button>
+                            <button id="aria2-test" class="action" type="button">测试连接</button>
+                        </div>
+                        <div id="aria2-status" class="rpc-status" role="status" aria-live="polite">
+                            密钥仅保存在本地
+                        </div>
+                    </form>
                 </section>
 
                 <section class="group">

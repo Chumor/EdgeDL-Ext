@@ -13,6 +13,7 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "isolatedModules": true,
+        "rewriteRelativeImportExtensions": true,
         "resolveJsonModule": true,
         "paths": {
             "@/*": ["./src/*"]
