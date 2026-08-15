@@ -46,7 +46,8 @@ The secret stays in browser-local storage. Use **Test connection** to verify the
 
 ## Installation
 
-- **Stable release:** https://github.com/Chumor/EdgeDL-Ext/releases/latest
+- **Microsoft Edge Add-ons Store:** https://microsoftedge.microsoft.com/addons/detail/pclohkfpeeblaaijmjijinnlbmakdfoe
+- **GitHub Releases:** https://github.com/Chumor/EdgeDL-Ext/releases/latest
 
 ## Permissions
 
