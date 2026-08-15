@@ -14,7 +14,7 @@
 ## Core Features
 
 - **Download takeover:** Send download requests to supported external download managers based on your configuration, or leave them to Edge.
-- **Downloader support:** Supports 1DM, 1DM+, ADM, ABDM, and FDM.
+- **Downloader support:** Supports 1DM, 1DM+, ADM, ABDM, FDM and aria2 RPC.
 - **Handling strategies:**
   - **Default handling:** Specify the default target for download requests.
   - **Ask on download:** Choose an external downloader or Edge before each download.
@@ -33,9 +33,16 @@
 | ADM | `com.dv.adm` |
 | ABDM | `com.abdownloadmanager` |
 | FDM | `org.freedownloadmanager.fdm` |
+| Aria2 RPC | Use aria2 RPC through `aria2.addUri` |
 | Edge | Do not take over the download; let Microsoft Edge handle it |
 
 > EdgeDL-Ext is responsible for detecting and forwarding download requests. Whether the final download succeeds depends on the target downloader, the website's download flow, and the Android system environment.
+
+### Aria2 RPC Configuration
+
+Enable **Aria2 RPC** in the Popup, then set the endpoint, optional secret, and download directory. Default: `http://127.0.0.1:6800/jsonrpc`. Local, LAN, and remote services are supported.
+
+The secret stays in browser-local storage. Use **Test connection** to verify the settings.
 
 ## Installation
 
@@ -47,9 +54,9 @@
 | --- | --- |
 | `storage` | Save site settings, default handling, and other local configuration. |
 | `tabs` | Get current tab information for Popup display and site-level configuration. |
-| `<all_urls>` | Detect download links and script-triggered download behavior on webpages. |
+| `<all_urls>` | Detect downloads and connect to the configured aria2 RPC endpoint. |
 
-EdgeDL-Ext requests `<all_urls>` because download buttons, download links, and script-triggered download behavior can appear on any website. The extension only processes related requests locally and does not upload browsing history or download history.
+EdgeDL-Ext requests `<all_urls>` because download buttons, download links, and script-triggered downloads can appear on any website; the background service also needs to connect to the configured aria2 RPC endpoint. The extension processes download detection and configuration locally and does not upload browsing or download history.
 
 ## Compatibility Notes
 
@@ -72,6 +79,7 @@ Websites with special download flows may require dedicated adaptation.
 ## Acknowledgements
 
 - Vectors and icons by [SVG Repo](https://www.svgrepo.com)
+- `aria2.svg` from [selfh.st/icons](https://github.com/selfhst/icons/blob/main/svg/aria2.svg), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 ## License
 

@@ -3,6 +3,7 @@
  * @description 交互式分发控制器：提供可视化 UI 供用户选择下载目标，并处理下载器偏好设置的持久化逻辑。
  */
 import { storage } from '@/pkg/browser/api';
+import { ARIA2_DOWNLOADER_VALUE } from '@/pkg/core/aria2';
 import { DEFAULT_DOWNLOADER_KEY, DOWNLOADERS, EDGE_DOWNLOADER_VALUE, getEdgeDLVersion } from '@/pkg/services/config';
 import { downloaderIcons } from './assets/icons';
 
@@ -33,6 +34,7 @@ const DOWNLOADER_OPTIONS: DownloaderOption[] = [
     { icon: downloaderIcons.ADM, label: 'ADM', packageName: DOWNLOADERS.ADM },
     { icon: downloaderIcons.ABDM, label: 'ABDM', packageName: DOWNLOADERS.ABDM },
     { icon: downloaderIcons.FDM, label: 'FDM', packageName: DOWNLOADERS.FDM },
+    { icon: downloaderIcons.ARIA2, label: 'Aria2 RPC', packageName: ARIA2_DOWNLOADER_VALUE },
     { icon: downloaderIcons.EDGE, label: 'Edge', packageName: EDGE_DOWNLOADER_VALUE },
 ];
 

@@ -113,7 +113,7 @@ async function handleDownloadCandidate(candidate: DownloadClickCandidate, option
         return false;
     }
 
-    const result = await requestDownload(candidate.url);
+    const result = await requestDownload(candidate.url, { referer: location.href });
     if (result.type === 'edge') {
         await allowPageNavigation(candidate.url);
         location.href = candidate.url;

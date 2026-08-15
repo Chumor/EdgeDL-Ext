@@ -1,7 +1,18 @@
 import { downloaderIcons } from '@/pages/components/assets/icons';
-import { queryActiveTab, sendMessageToTab, storage } from '@/pkg/browser/api';
+import { queryActiveTab, sendMessageToTab, sendRuntimeMessage, storage } from '@/pkg/browser/api';
+import { EDGEDL_MESSAGE_SOURCE, type Aria2RuntimeResponse } from '@/pkg/browser/messages';
+import {
+    ARIA2_CONFIG_KEY,
+    ARIA2_DOWNLOADER_VALUE,
+    ARIA2_SETTINGS_EXPANDED_KEY,
+    DEFAULT_ARIA2_CONFIG,
+    type Aria2Config,
+    normalizeAria2Config,
+    normalizeAria2Endpoint,
+} from '@/pkg/core/aria2';
 import { getInterceptSitesKey } from '@/pkg/core/intercept';
 import { DEFAULT_DOWNLOADER_KEY, DOWNLOADERS, EDGE_DOWNLOADER_VALUE, getEdgeDLVersion } from '@/pkg/services/config';
+import { getErrorMessage } from '@/pkg/utils/error';
 
 const POPUP_COMMAND_SOURCE = 'edgedl-popup-command';
 
@@ -37,6 +48,12 @@ const downloaderOptions = [
         description: 'Free Download Manager',
     },
     {
+        label: 'Aria2 RPC',
+        value: ARIA2_DOWNLOADER_VALUE,
+        icon: downloaderIcons.ARIA2,
+        description: '通过 RPC 添加到 aria2',
+    },
+    {
         label: 'Edge',
         value: EDGE_DOWNLOADER_VALUE,
         icon: downloaderIcons.EDGE,
@@ -54,12 +71,16 @@ interface SiteStateResponse {
 
 interface PopupState {
     activeTab: chrome.tabs.Tab | null;
+    aria2Config: Aria2Config;
+    aria2SettingsExpanded: boolean;
     defaultDownloader: string | null;
     siteState: SiteStateResponse | null;
 }
 
 const state: PopupState = {
     activeTab: null,
+    aria2Config: { ...DEFAULT_ARIA2_CONFIG },
+    aria2SettingsExpanded: false,
     defaultDownloader: null,
     siteState: null,
 };
@@ -165,12 +186,16 @@ async function getCurrentSiteState(tab: chrome.tabs.Tab) {
 }
 
 async function loadState() {
-    const [tab, defaultDownloader] = await Promise.all([
+    const [tab, defaultDownloader, aria2Config, aria2SettingsExpanded] = await Promise.all([
         queryActiveTab(),
         storage.get<string | null>(DEFAULT_DOWNLOADER_KEY, null),
+        storage.get<Aria2Config>(ARIA2_CONFIG_KEY, DEFAULT_ARIA2_CONFIG),
+        storage.get(ARIA2_SETTINGS_EXPANDED_KEY, false),
     ]);
 
     state.activeTab = tab;
+    state.aria2Config = normalizeAria2Config(aria2Config);
+    state.aria2SettingsExpanded = aria2SettingsExpanded;
     state.defaultDownloader = defaultDownloader;
     state.siteState = tab ? await getCurrentSiteState(tab) : null;
 }
@@ -223,33 +248,74 @@ function renderSiteControls() {
     siteDesc.textContent = enabled ? '处理本站下载跳转' : '本站已暂停';
 }
 
-function getViewportBottom() {
-    const viewport = window.visualViewport;
-    return viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+function setAria2Status(message: string, type: 'error' | 'idle' | 'success' = 'idle') {
+    const status = qs<HTMLElement>('#aria2-status');
+    status.textContent = message;
+    status.classList.toggle('error', type === 'error');
+    status.classList.toggle('success', type === 'success');
 }
 
-function layoutDownloaderGrid() {
-    const grid = qs<HTMLElement>('#downloader-grid');
-    const content = grid.closest<HTMLElement>('.content');
-    if (!content) return;
+function renderAria2Settings() {
+    const switchButton = qs<HTMLButtonElement>('#aria2-settings-switch');
+    const form = qs<HTMLFormElement>('#aria2-form');
+    const expanded = state.aria2SettingsExpanded;
 
-    const bottomGap = Number.parseFloat(window.getComputedStyle(content).paddingBottom) || 0;
-    const availableHeight = Math.max(0, getViewportBottom() - grid.getBoundingClientRect().top - bottomGap);
+    switchButton.classList.toggle('on', expanded);
+    switchButton.setAttribute('aria-pressed', String(expanded));
+    switchButton.setAttribute('aria-expanded', String(expanded));
+    switchButton.setAttribute('aria-label', expanded ? '收起 Aria2 RPC 设置' : '展开 Aria2 RPC 设置');
+    switchButton.title = expanded ? '收起 Aria2 RPC 设置' : '展开 Aria2 RPC 设置';
+    form.hidden = !expanded;
 
-    grid.style.maxHeight = `${Math.min(availableHeight, grid.scrollHeight)}px`;
+    qs<HTMLInputElement>('#aria2-endpoint').value = state.aria2Config.endpoint;
+    qs<HTMLInputElement>('#aria2-secret').value = state.aria2Config.secret;
+    qs<HTMLInputElement>('#aria2-directory').value = state.aria2Config.directory;
 }
 
-function scrollSelectedDownloaderIntoView() {
-    const grid = qs<HTMLElement>('#downloader-grid');
-    const selected = grid.querySelector<HTMLButtonElement>('.downloader.selected');
-    if (!selected) return;
+function readAria2ConfigForm(): Aria2Config {
+    return {
+        directory: qs<HTMLInputElement>('#aria2-directory').value.trim(),
+        endpoint: normalizeAria2Endpoint(qs<HTMLInputElement>('#aria2-endpoint').value),
+        secret: qs<HTMLInputElement>('#aria2-secret').value,
+    };
+}
 
-    const gridRect = grid.getBoundingClientRect();
-    const selectedRect = selected.getBoundingClientRect();
-    const itemTop = selectedRect.top - gridRect.top + grid.scrollTop;
-    const itemBottom = itemTop + selectedRect.height;
-    if (itemTop < grid.scrollTop) grid.scrollTop = itemTop;
-    else if (itemBottom > grid.scrollTop + grid.clientHeight) grid.scrollTop = itemBottom - grid.clientHeight;
+async function saveAria2Config() {
+    const config = readAria2ConfigForm();
+    await storage.set(ARIA2_CONFIG_KEY, config);
+    state.aria2Config = config;
+    qs<HTMLInputElement>('#aria2-endpoint').value = config.endpoint;
+    setAria2Status('配置已保存', 'success');
+    return config;
+}
+
+async function testAria2Connection() {
+    try {
+        await saveAria2Config();
+    } catch (error: unknown) {
+        const message = getErrorMessage(error);
+        setAria2Status(message, 'error');
+        showToast(message);
+        return;
+    }
+
+    setAria2Status('连接中…');
+
+    try {
+        const response = await sendRuntimeMessage<Aria2RuntimeResponse>({
+            source: EDGEDL_MESSAGE_SOURCE,
+            type: 'aria2-test-connection',
+        });
+
+        if (!response.ok) throw new Error(response.error);
+        if (!response.version) throw new Error('aria2 未返回版本');
+
+        setAria2Status(`已连接 · aria2 ${response.version}`, 'success');
+        showToast('Aria2 已连接');
+    } catch (error: unknown) {
+        setAria2Status(getErrorMessage(error), 'error');
+        throw error;
+    }
 }
 
 function renderDownloaderGrid() {
@@ -282,9 +348,6 @@ function renderDownloaderGrid() {
             return button;
         }),
     );
-
-    layoutDownloaderGrid();
-    scrollSelectedDownloaderIntoView();
 }
 
 function renderDefaultDesc() {
@@ -302,6 +365,7 @@ function renderDefaultDesc() {
 function render() {
     renderHeader();
     renderSiteControls();
+    renderAria2Settings();
     renderDownloaderGrid();
     renderDefaultDesc();
 }
@@ -370,6 +434,10 @@ function bindEvents() {
     const openPickerButton = qs<HTMLButtonElement>('#open-picker');
     const refreshButton = qs<HTMLButtonElement>('#reload-state');
     const clearButton = qs<HTMLButtonElement>('#clear-default');
+    const aria2Form = qs<HTMLFormElement>('#aria2-form');
+    const aria2SettingsSwitch = qs<HTMLButtonElement>('#aria2-settings-switch');
+    const aria2SaveButton = qs<HTMLButtonElement>('#aria2-save');
+    const aria2TestButton = qs<HTMLButtonElement>('#aria2-test');
 
     grid.addEventListener('click', (event) => {
         const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('button[data-pkg]');
@@ -387,6 +455,50 @@ function bindEvents() {
                 logMessage: '[EdgeDL] Failed to update default downloader',
             },
         );
+    });
+
+    aria2SettingsSwitch.addEventListener('click', () => {
+        void runPopupAction(
+            async () => {
+                const expanded = !state.aria2SettingsExpanded;
+                await storage.set(ARIA2_SETTINGS_EXPANDED_KEY, expanded);
+                state.aria2SettingsExpanded = expanded;
+                renderAria2Settings();
+            },
+            {
+                busyElement: aria2SettingsSwitch,
+                failureMessage: '切换 Aria2 设置失败',
+                logMessage: '[EdgeDL] Failed to toggle aria2 RPC settings',
+            },
+        );
+    });
+
+    aria2Form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        void runPopupAction(
+            async () => {
+                try {
+                    await saveAria2Config();
+                    showToast('Aria2 配置已保存');
+                } catch (error: unknown) {
+                    setAria2Status(getErrorMessage(error), 'error');
+                    throw error;
+                }
+            },
+            {
+                busyElement: aria2SaveButton,
+                failureMessage: '保存 Aria2 配置失败',
+                logMessage: '[EdgeDL] Failed to save aria2 RPC configuration',
+            },
+        );
+    });
+
+    aria2TestButton.addEventListener('click', () => {
+        void runPopupAction(testAria2Connection, {
+            busyElement: aria2TestButton,
+            failureMessage: 'Aria2 连接失败',
+            logMessage: '[EdgeDL] Failed to test aria2 RPC connection',
+        });
     });
 
     switchButton.addEventListener('click', () => {
@@ -424,13 +536,6 @@ function bindEvents() {
             },
         );
     });
-
-    const handleViewportChange = () => {
-        layoutDownloaderGrid();
-        scrollSelectedDownloaderIntoView();
-    };
-    window.addEventListener('resize', handleViewportChange);
-    window.visualViewport?.addEventListener('resize', handleViewportChange);
 
     clearButton.addEventListener('click', () => {
         void runPopupAction(
